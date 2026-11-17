@@ -1,0 +1,6 @@
+{
+  "name": "Serendib Reserve — Fine Ceylon Gemstones",
+  "description": "Serendib Reserve (Pvt) Ltd — Ethically sourced, expertly cut and certified Ceylon sapphires and fine Sri Lankan gemstones, trading from Colombo to the world.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
