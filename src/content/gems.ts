@@ -45,6 +45,8 @@ export interface GemSpec {
   sriLankanSources: string;
   whatMakesAFineOne: string;
   oneLineCaption: string;
+  photoUrl: string;
+  matteTolerance?: number;
   featuredInCarousel?: boolean;
   featuredInGallery?: boolean;
 }
@@ -82,6 +84,7 @@ export const GEMS_DATA: GemSpec[] = [
     whatMakesAFineOne:
       'Pure vivid royal-to-cornflower saturation without grey or green zoning, lively brilliance across the table, eye-clean clarity, balanced pavilion proportions, and full disclosure of heat or unheated status.',
     oneLineCaption: 'Velvety royal light, born in Ceylon river gravels.',
+    photoUrl: '/assets/aistudio/Royal_Blue_Sapphire_from_Sri_Lanka__Ceylon__1d3f139f.png',
     featuredInCarousel: true,
     featuredInGallery: true,
   },
@@ -104,6 +107,7 @@ export const GEMS_DATA: GemSpec[] = [
     whatMakesAFineOne:
       'True equilibrium between pink and orange — neither purely pink nor purely orange — paired with luminous transparency, minimal colour zoning, and documented unheated or gentle thermal provenance.',
     oneLineCaption: 'A delicate marriage of lotus pink and sunset orange.',
+    photoUrl: '/assets/aistudio/Padparadscha_Sapphire_556bee04.png',
     featuredInCarousel: true,
     featuredInGallery: true,
   },
@@ -126,6 +130,7 @@ export const GEMS_DATA: GemSpec[] = [
     whatMakesAFineOne:
       'Six crisp, straight rays intersecting cleanly at the apex of a symmetrical dome cabochon, gliding effortlessly under a single pinpoint light source against rich, even body colour.',
     oneLineCaption: 'Six silver rays gliding across a domed sapphire sky.',
+    photoUrl: '/assets/aistudio/Star_Sapphire_64800eb8.png',
     featuredInCarousel: true,
     featuredInGallery: true,
   },
@@ -148,6 +153,8 @@ export const GEMS_DATA: GemSpec[] = [
     whatMakesAFineOne:
       'Crisp clarity (especially in white and yellow stones), lively step or brilliant faceting, strong shift intensity in colour-change varieties, and verified treatment transparency.',
     oneLineCaption: 'Sunlight, blossom, pure ice, and twilight in one mineral family.',
+    photoUrl: '/assets/aistudio/Yellow__Pink__White___Colour-Change_Sapphire_432bce40.png',
+    matteTolerance: 36,
     featuredInCarousel: false,
     featuredInGallery: true,
   },
@@ -170,6 +177,7 @@ export const GEMS_DATA: GemSpec[] = [
     whatMakesAFineOne:
       'Pure red saturation with lively chromium fluorescence, clean crystal transparency, symmetrical cutting without windowing, and transparent disclosure of any heat treatment.',
     oneLineCaption: 'Glowing crimson heart tempered in Sri Lankan earth.',
+    photoUrl: '/assets/aistudio/Ceylon_Ruby_3abdaceb.png',
     featuredInCarousel: true,
     featuredInGallery: true,
   },
@@ -192,6 +200,7 @@ export const GEMS_DATA: GemSpec[] = [
     whatMakesAFineOne:
       'Dramatic 80–100% chromatic shift between cool daylight and warm candlelight, vibrant saturation in both lighting states, high clarity, and complete absence of treatment.',
     oneLineCaption: 'One crystal, two worlds: green at noon, plum by candlelight.',
+    photoUrl: '/assets/aistudio/Ceylon_Alexandrite_ebedf34a.png',
     featuredInCarousel: true,
     featuredInGallery: true,
   },
@@ -214,6 +223,7 @@ export const GEMS_DATA: GemSpec[] = [
     whatMakesAFineOne:
       'A razor-sharp, bright chatoyant band cutting cleanly down the centre of the cabochon dome, displaying the classic "milk and honey" contrast under directional light.',
     oneLineCaption: 'A living silver slit of light across honey-gold stone.',
+    photoUrl: '/assets/aistudio/Cat_s_Eye_Chrysoberyl_e0d77568.png',
     featuredInCarousel: true,
     featuredInGallery: true,
   },
@@ -236,6 +246,7 @@ export const GEMS_DATA: GemSpec[] = [
     whatMakesAFineOne:
       'Singly refractive brilliance that never sleeps, electric cobalt or vivid red hues, naturally unheated status (spinel is rarely treated), and crisp octahedral-inspired faceting.',
     oneLineCaption: 'Unheated singly refractive fire in cobalt and scarlet.',
+    photoUrl: '/assets/aistudio/Ceylon_Spinel_a5fd65e6.png',
     featuredInCarousel: true,
     featuredInGallery: true,
   },
@@ -258,6 +269,7 @@ export const GEMS_DATA: GemSpec[] = [
     whatMakesAFineOne:
       'High refractive sparkle without dark extinction, warm cinnamon clarity in traditional Sri Lankan hessonite ("Gomed"), or bright raspberry-violet tone in rhodolite.',
     oneLineCaption: 'From cinnamon hessonite to deep raspberry rhodolite.',
+    photoUrl: '/assets/aistudio/Ceylon_Garnets_7556a118.png',
     featuredInCarousel: false,
     featuredInGallery: true,
   },
@@ -280,6 +292,7 @@ export const GEMS_DATA: GemSpec[] = [
     whatMakesAFineOne:
       'Clean orientation of the c-axis during cutting to bring out the brightest open hue rather than dark closed ends, combined with strong internal lustre.',
     oneLineCaption: 'Sharp architectural step cuts revealing deep pleochroic tone.',
+    photoUrl: '/assets/aistudio/Ceylon_Tourmaline_23b94a4d.png',
     featuredInCarousel: false,
     featuredInGallery: true,
   },
@@ -302,6 +315,8 @@ export const GEMS_DATA: GemSpec[] = [
     whatMakesAFineOne:
       'Pure pastel-to-medium blue tone free of muddy grey, pristine eye-clean transparency, and elongated step or scissor cuts that amplify water-clear brilliance.',
     oneLineCaption: 'Oceanic clarity faceted into tranquil light.',
+    photoUrl: '/assets/aistudio/Aquamarine___Fine_Beryl_257c3df3.png',
+    matteTolerance: 14,
     featuredInCarousel: false,
     featuredInGallery: true,
   },
@@ -324,6 +339,8 @@ export const GEMS_DATA: GemSpec[] = [
     whatMakesAFineOne:
       'Flawless internal clarity, high polish on sharp facet junctions, and rich natural sherry or crisp ice-white brilliance without artificial surface coatings.',
     oneLineCaption: 'Glass-clear Ceylon white and warm champagne brilliance.',
+    photoUrl: '/assets/aistudio/Ceylon_White___Imperial-Tone_Topaz_06d5bfc3.png',
+    matteTolerance: 18,
     featuredInCarousel: false,
     featuredInGallery: false,
   },
@@ -346,6 +363,7 @@ export const GEMS_DATA: GemSpec[] = [
     whatMakesAFineOne:
       'Even colour distribution without harsh banding, precision Portuguese or concave brilliant cuts that awaken internal flashes, and verified natural origin.',
     oneLineCaption: 'Precision-cut violet and amber quartz of pure clarity.',
+    photoUrl: '/assets/aistudio/Amethyst___Citrine_5464b270.png',
     featuredInCarousel: false,
     featuredInGallery: false,
   },
@@ -368,6 +386,8 @@ export const GEMS_DATA: GemSpec[] = [
     whatMakesAFineOne:
       'Water-clear transparency paired with a vivid electric-blue adularescent billow floating cleanly across the dome as the stone tilts in soft light.',
     oneLineCaption: 'Liquid blue moonlight captured beneath a satin dome.',
+    photoUrl: '/assets/aistudio/Ceylon_Blue_Moonstone_27dccc4d.png',
+    matteTolerance: 22,
     featuredInCarousel: true,
     featuredInGallery: true,
   },
@@ -390,6 +410,7 @@ export const GEMS_DATA: GemSpec[] = [
     whatMakesAFineOne:
       'Diamond-like fire and strong double refraction visible as crisp doubled facet edges under a loupe, paired with lively saturation and gentle handling.',
     oneLineCaption: 'High-dispersion fire that rivals the brilliance of diamond.',
+    photoUrl: '/assets/aistudio/Ceylon_Zircon_74259b9d.png',
     featuredInCarousel: false,
     featuredInGallery: false,
   },
@@ -412,6 +433,7 @@ export const GEMS_DATA: GemSpec[] = [
     whatMakesAFineOne:
       'Distinctive optical phenomena — such as sphene’s extraordinary rainbow dispersion or iolite’s dramatic pleochroism — curated for specialist collectors and bespoke designers.',
     oneLineCaption: 'Collector curiosities of high dispersion and pleochroism.',
+    photoUrl: '/assets/aistudio/Peridot__Sphene__Kyanite__Apatite___Iolite_b3d264ab.png',
     featuredInCarousel: false,
     featuredInGallery: false,
   },
@@ -434,6 +456,7 @@ export const GEMS_DATA: GemSpec[] = [
     whatMakesAFineOne:
       'First identified in Sri Lanka in 1902 and named after Serendib itself. Faceted transparent stones over half a carat are among the rarest collector minerals on Earth.',
     oneLineCaption: 'One of the rarest minerals on Earth, named for Sri Lanka.',
+    photoUrl: '/assets/aistudio/Serendibite_5a52e44c.png',
     featuredInCarousel: false,
     featuredInGallery: true,
   },

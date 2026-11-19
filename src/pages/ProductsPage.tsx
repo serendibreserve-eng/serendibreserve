@@ -1,25 +1,156 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { ArrowRight, Droplets, Shield, Sparkles } from 'lucide-react';
+import React, { useEffect, useMemo, useState } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { ArrowRight, Droplets, Eye, Shield, Sparkles } from 'lucide-react';
 import {
   CARE_CLEANING_GUIDE,
   CHOOSE_STONE_STEPS,
   PRODUCT_CATEGORIES,
+  ProductCategory,
   SAMPLE_CATALOGUE,
+  SampleStone,
 } from '../content/products';
 import { buildInquiryPrefillQuery } from '../utils/formLogic';
+import { GemSpecimenPhoto } from '../components/GemSpecimenPhoto';
 import { GemSVG } from '../components/GemSVG';
 import { SplitHeading, TiltGemCard } from '../components/MotionPrimitives';
 import { PageSEO } from '../components/PageSEO';
+import { SpecimenDetailModal, SpecimenModalData } from '../components/SpecimenDetailModal';
+
+function stoneToModalData(stone: SampleStone): SpecimenModalData {
+  return {
+    id: stone.id,
+    eyebrow: `SAMPLE DATA · ${stone.id} · ${stone.origin}`,
+    title: stone.name,
+    subtitle: `${stone.species} — ${stone.category}`,
+    photoUrl: stone.photoUrl,
+    cut: stone.cut,
+    colorHex: stone.colorHex,
+    secondaryColorHex: '#3D7BFF',
+    glowHex: stone.colorHex,
+    ior: 1.76,
+    effect: stone.name.toLowerCase().includes('alexandrite')
+      ? 'alexandrite'
+      : stone.name.toLowerCase().includes('star')
+        ? 'star'
+        : stone.name.toLowerCase().includes("cat's eye")
+          ? 'cats-eye'
+          : stone.name.toLowerCase().includes('moonstone')
+            ? 'moonstone'
+            : 'standard',
+    matteTolerance: stone.matteTolerance,
+    specs: [
+      { label: 'Carat / Size', value: stone.caratRange, mono: true },
+      { label: 'Colour Grade', value: stone.colourGrade },
+      { label: 'Clarity', value: stone.clarity },
+      { label: 'Treatment Status', value: stone.treatmentStatus },
+      { label: 'Independent Lab', value: stone.lab },
+      { label: 'Availability', value: stone.priceLabel },
+    ],
+    highlightTitle: 'Reserve Selection Standard',
+    highlightBody:
+      'Every Serendib Reserve specimen is individually vetted in Colombo for natural light return, transparent treatment disclosure, and accompanying laboratory documentation upon request.',
+    ctaLabel: 'Request Private Quote',
+  };
+}
+
+function categoryToModalData(cat: ProductCategory): SpecimenModalData {
+  return {
+    id: cat.id,
+    eyebrow: `Product Offering · ${cat.number}`,
+    title: cat.title,
+    subtitle: cat.subtitle,
+    photoUrl: cat.photoUrl,
+    cut: cat.cut,
+    colorHex: cat.colorHex,
+    secondaryColorHex: '#3D7BFF',
+    glowHex: cat.colorHex,
+    ior: 1.76,
+    matteTolerance: cat.matteTolerance,
+    specs: [
+      { label: 'Service Code', value: `SR-OFFERING-${cat.number}`, mono: true },
+      { label: 'Primary Cut Silhouette', value: cat.cut },
+      { label: 'Origin Focus', value: 'Sri Lanka (Ceylon)', span2: true },
+    ],
+    highlightTitle: 'Tailored Sourcing & Craft',
+    highlightBody: cat.description,
+    ctaLabel: `Inquire on ${cat.title.split(' ')[0]}`,
+  };
+}
 
 export const ProductsPage: React.FC = () => {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
+  const [activeModal, setActiveModal] = useState<SpecimenModalData | null>(null);
+  const [selectedStoneMeta, setSelectedStoneMeta] = useState<{
+    gem: string;
+    shape: SampleStone['cut'];
+    carat?: string;
+    type: string;
+  } | null>(null);
 
-  const filteredCatalogue =
-    selectedCategory === 'All'
-      ? SAMPLE_CATALOGUE
-      : SAMPLE_CATALOGUE.filter((s) => s.category === selectedCategory);
+  useEffect(() => {
+    const stoneParam = searchParams.get('stone');
+    if (stoneParam) {
+      const found = SAMPLE_CATALOGUE.find((s) => s.id === stoneParam);
+      if (found) {
+        setActiveModal(stoneToModalData(found));
+        setSelectedStoneMeta({
+          gem: found.name,
+          shape: found.cut,
+          carat: found.caratRange,
+          type: 'Buy loose gems',
+        });
+      }
+    }
+  }, [searchParams]);
+
+  const filteredCatalogue = useMemo(
+    () =>
+      selectedCategory === 'All'
+        ? SAMPLE_CATALOGUE
+        : SAMPLE_CATALOGUE.filter((s) => s.category === selectedCategory),
+    [selectedCategory],
+  );
+
+  const openStone = (stone: SampleStone) => {
+    setActiveModal(stoneToModalData(stone));
+    setSelectedStoneMeta({
+      gem: stone.name,
+      shape: stone.cut,
+      carat: stone.caratRange,
+      type: 'Buy loose gems',
+    });
+    setSearchParams({ stone: stone.id });
+  };
+
+  const openCategory = (cat: ProductCategory) => {
+    setActiveModal(categoryToModalData(cat));
+    setSelectedStoneMeta({
+      gem: cat.title,
+      shape: cat.cut,
+      type: cat.id === 'fine-jewellery' ? 'Custom jewellery' : 'Buy loose gems',
+    });
+  };
+
+  const closeModal = () => {
+    setActiveModal(null);
+    if (searchParams.has('stone')) {
+      setSearchParams({});
+    }
+  };
+
+  const handleModalAction = () => {
+    if (!selectedStoneMeta) return;
+    navigate(
+      buildInquiryPrefillQuery({
+        gem: selectedStoneMeta.gem,
+        shape: selectedStoneMeta.shape,
+        carat: selectedStoneMeta.carat,
+        type: selectedStoneMeta.type,
+      }),
+    );
+  };
 
   return (
     <div className="min-h-screen bg-[#05070D] pb-24 pt-28">
@@ -37,35 +168,57 @@ export const ProductsPage: React.FC = () => {
             Loose Stones, Calibrated Suites & Craft
           </SplitHeading>
           <p className="mt-4 text-base leading-relaxed text-[#C9D1DC]">
-            From investment-grade certified single stones to precision calibrated parcels and bespoke fine jewellery silhouettes.
+            From investment-grade certified single stones to precision calibrated parcels and bespoke fine jewellery silhouettes. Select any piece to inspect the specimen up close.
           </p>
         </div>
 
         {/* 9 Product Categories Grid */}
         <section className="mt-12 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
           {PRODUCT_CATEGORIES.map((cat) => (
-            <TiltGemCard key={cat.id} className="flex flex-col justify-between p-6">
+            <TiltGemCard key={cat.id} className="group flex flex-col justify-between p-0">
               <div>
-                <div className="flex items-center justify-between">
-                  <span className="font-mono-tabular text-xs text-[#3D7BFF]">{cat.number}</span>
-                  <GemSVG
-                    cut={cat.cut}
-                    colorHex={cat.colorHex}
-                    secondaryColorHex="#E6EAF0"
-                    size={54}
-                    label={cat.title}
+                <button
+                  type="button"
+                  onClick={() => openCategory(cat)}
+                  aria-label={`Inspect ${cat.title}`}
+                  className="relative block h-48 w-full border-b border-[#C9D1DC]/12 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#3D7BFF]"
+                >
+                  <GemSpecimenPhoto
+                    src={cat.photoUrl}
+                    alt={cat.title}
+                    glowHex={cat.colorHex}
+                    tolerance={cat.matteTolerance}
+                    className="h-full w-full"
                   />
+                  <span className="font-mono-tabular absolute left-4 top-3 z-20 text-[11px] tracking-[0.18em] text-[#E6EAF0]/80">
+                    {cat.number}
+                  </span>
+                  <span className="absolute right-4 top-3 z-20 inline-flex items-center gap-1 border border-[#C9D1DC]/25 bg-[#05070D]/80 px-2.5 py-1 text-[10px] tracking-[0.16em] uppercase text-[#C9D1DC] opacity-0 transition-opacity duration-300 group-hover:opacity-100">
+                    <Eye size={11} aria-hidden="true" />
+                    <span>Inspect</span>
+                  </span>
+                </button>
+
+                <div className="p-6 pb-4">
+                  <h2 className="font-display text-2xl font-light text-white">{cat.title}</h2>
+                  <p className="mt-1 text-xs tracking-[0.14em] uppercase text-[#3D7BFF]">
+                    {cat.subtitle}
+                  </p>
+                  <p className="mt-3 text-xs leading-relaxed text-[#C9D1DC]/85">
+                    {cat.description}
+                  </p>
                 </div>
-                <h2 className="mt-3 font-display text-2xl font-light text-white">{cat.title}</h2>
-                <p className="mt-1 text-xs tracking-[0.14em] uppercase text-[#C9D1DC]/75">
-                  {cat.subtitle}
-                </p>
-                <p className="mt-3 text-xs leading-relaxed text-[#C9D1DC]/85">
-                  {cat.description}
-                </p>
               </div>
 
-              <div className="mt-6 border-t border-[#C9D1DC]/12 pt-4">
+              <div className="mx-6 mb-6 flex items-center justify-between border-t border-[#C9D1DC]/12 pt-4">
+                <button
+                  type="button"
+                  onClick={() => openCategory(cat)}
+                  className="inline-flex items-center gap-1.5 text-xs tracking-[0.16em] uppercase text-[#C9D1DC] hover:text-white"
+                >
+                  <Eye size={13} aria-hidden="true" />
+                  <span>Quick View</span>
+                </button>
                 <button
                   type="button"
                   onClick={() =>
@@ -76,9 +229,9 @@ export const ProductsPage: React.FC = () => {
                       }),
                     )
                   }
-                  className="inline-flex items-center gap-2 text-xs tracking-[0.16em] uppercase text-white hover:text-[#3D7BFF]"
+                  className="inline-flex items-center gap-2 text-xs font-medium tracking-[0.16em] uppercase text-white hover:text-[#3D7BFF]"
                 >
-                  <span>Inquire on {cat.title.split(' ')[0]}</span>
+                  <span>Inquire</span>
                   <ArrowRight size={13} aria-hidden="true" />
                 </button>
               </div>
@@ -138,10 +291,10 @@ export const ProductsPage: React.FC = () => {
                   key={f}
                   type="button"
                   onClick={() => setSelectedCategory(f)}
-                  className={`whitespace-nowrap shrink-0 border px-3.5 py-2 text-xs tracking-[0.12em] uppercase ${
+                  className={`whitespace-nowrap shrink-0 border px-3.5 py-2 text-xs tracking-[0.12em] uppercase transition-colors ${
                     selectedCategory === f
                       ? 'border-[#3D7BFF] bg-[#1B3FD9]/30 text-white'
-                      : 'border-[#C9D1DC]/20 bg-[#0A1226]/50 text-[#C9D1DC]'
+                      : 'border-[#C9D1DC]/20 bg-[#0A1226]/50 text-[#C9D1DC] hover:border-[#C9D1DC]/45'
                   }`}
                 >
                   {f}
@@ -152,76 +305,93 @@ export const ProductsPage: React.FC = () => {
 
           <div className="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {filteredCatalogue.map((stone) => (
-              <div
-                key={stone.id}
-                className="flex flex-col justify-between border border-[#C9D1DC]/15 bg-[#0A1226]/65 p-6"
-              >
+              <TiltGemCard key={stone.id} className="group flex flex-col justify-between p-0">
                 <div>
-                  <div className="flex items-center justify-between text-[11px] tracking-[0.15em] uppercase text-[#3D7BFF]">
-                    <span>SAMPLE DATA · {stone.id}</span>
-                    <span>{stone.origin}</span>
-                  </div>
-
-                  <div className="my-5 flex items-center gap-4">
-                    <GemSVG
-                      cut={stone.cut}
-                      colorHex={stone.colorHex}
-                      secondaryColorHex="#E6EAF0"
-                      size={74}
-                      label={stone.name}
+                  <button
+                    type="button"
+                    onClick={() => openStone(stone)}
+                    aria-label={`Open ${stone.name} dossier`}
+                    className="relative block h-56 w-full border-b border-[#C9D1DC]/12 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#3D7BFF]"
+                  >
+                    <GemSpecimenPhoto
+                      src={stone.photoUrl}
+                      alt={stone.name}
+                      glowHex={stone.colorHex}
+                      tolerance={stone.matteTolerance}
+                      className="h-full w-full"
                     />
-                    <div>
-                      <h3 className="font-display text-2xl font-light text-white">{stone.name}</h3>
-                      <p className="mt-1 text-xs text-[#C9D1DC]">{stone.species}</p>
-                    </div>
-                  </div>
+                    <span className="font-mono-tabular absolute left-4 top-3 z-20 text-[10px] tracking-[0.15em] uppercase text-[#C9D1DC]/80">
+                      SAMPLE DATA · {stone.id}
+                    </span>
+                    <span className="absolute right-4 top-3 z-20 inline-flex items-center gap-1 border border-[#C9D1DC]/25 bg-[#05070D]/80 px-2.5 py-1 text-[10px] tracking-[0.16em] uppercase text-[#C9D1DC] opacity-0 transition-opacity duration-300 group-hover:opacity-100">
+                      <Eye size={11} aria-hidden="true" />
+                      <span>Open Specimen</span>
+                    </span>
+                  </button>
 
-                  <dl className="space-y-1.5 border-t border-[#C9D1DC]/12 pt-4 text-xs">
-                    <div className="flex justify-between gap-2">
-                      <dt className="text-[#C9D1DC]/70">Carat / Size</dt>
-                      <dd className="font-mono-tabular text-white">{stone.caratRange}</dd>
-                    </div>
-                    <div className="flex justify-between gap-2">
-                      <dt className="text-[#C9D1DC]/70">Colour Grade</dt>
-                      <dd className="text-right text-white">{stone.colourGrade}</dd>
-                    </div>
-                    <div className="flex justify-between gap-2">
-                      <dt className="text-[#C9D1DC]/70">Clarity</dt>
-                      <dd className="text-white">{stone.clarity}</dd>
-                    </div>
-                    <div className="flex justify-between gap-2">
-                      <dt className="text-[#C9D1DC]/70">Treatment</dt>
-                      <dd className="text-white">{stone.treatmentStatus}</dd>
-                    </div>
-                    <div className="flex justify-between gap-2">
-                      <dt className="text-[#C9D1DC]/70">Lab Report</dt>
-                      <dd className="text-[#C9D1DC]">{stone.lab}</dd>
-                    </div>
-                  </dl>
+                  <div className="p-6 pb-4">
+                    <p className="text-[11px] tracking-[0.15em] uppercase text-[#3D7BFF]">
+                      {stone.origin}
+                    </p>
+                    <h3 className="mt-1 font-display text-2xl font-light text-white">{stone.name}</h3>
+                    <p className="mt-0.5 text-xs text-[#C9D1DC]">{stone.species}</p>
+
+                    <dl className="mt-4 space-y-1.5 border-t border-[#C9D1DC]/12 pt-4 text-xs">
+                      <div className="flex justify-between gap-2">
+                        <dt className="text-[#C9D1DC]/70">Carat / Size</dt>
+                        <dd className="font-mono-tabular text-white">{stone.caratRange}</dd>
+                      </div>
+                      <div className="flex justify-between gap-2">
+                        <dt className="text-[#C9D1DC]/70">Colour Grade</dt>
+                        <dd className="text-right text-white">{stone.colourGrade}</dd>
+                      </div>
+                      <div className="flex justify-between gap-2">
+                        <dt className="text-[#C9D1DC]/70">Clarity</dt>
+                        <dd className="text-white">{stone.clarity}</dd>
+                      </div>
+                      <div className="flex justify-between gap-2">
+                        <dt className="text-[#C9D1DC]/70">Treatment</dt>
+                        <dd className="text-white">{stone.treatmentStatus}</dd>
+                      </div>
+                      <div className="flex justify-between gap-2">
+                        <dt className="text-[#C9D1DC]/70">Lab Report</dt>
+                        <dd className="text-[#C9D1DC]">{stone.lab}</dd>
+                      </div>
+                    </dl>
+                  </div>
                 </div>
 
-                <div className="mt-6 flex items-center justify-between border-t border-[#C9D1DC]/12 pt-4">
+                <div className="mx-6 mb-6 flex items-center justify-between gap-2 border-t border-[#C9D1DC]/12 pt-4">
                   <span className="text-xs font-medium tracking-wider uppercase text-[#E6EAF0]">
                     {stone.priceLabel}
                   </span>
-                  <button
-                    type="button"
-                    onClick={() =>
-                      navigate(
-                        buildInquiryPrefillQuery({
-                          gem: stone.name,
-                          shape: stone.cut,
-                          carat: stone.caratRange,
-                          type: 'Buy loose gems',
-                        }),
-                      )
-                    }
-                    className="btn-luxury px-4 py-2 text-xs tracking-[0.16em] uppercase text-white"
-                  >
-                    Inquire
-                  </button>
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => openStone(stone)}
+                      className="btn-luxury px-3.5 py-2 text-xs tracking-[0.14em] uppercase text-[#C9D1DC]"
+                    >
+                      Inspect
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        navigate(
+                          buildInquiryPrefillQuery({
+                            gem: stone.name,
+                            shape: stone.cut,
+                            carat: stone.caratRange,
+                            type: 'Buy loose gems',
+                          }),
+                        )
+                      }
+                      className="btn-luxury-primary px-4 py-2 text-xs tracking-[0.16em] uppercase text-white"
+                    >
+                      Inquire
+                    </button>
+                  </div>
                 </div>
-              </div>
+              </TiltGemCard>
             ))}
           </div>
         </section>
@@ -263,6 +433,14 @@ export const ProductsPage: React.FC = () => {
           </div>
         </section>
       </div>
+
+      {/* Animated Specimen Modal */}
+      <SpecimenDetailModal
+        item={activeModal}
+        onClose={closeModal}
+        onAction={handleModalAction}
+        defaultViewMode="photo"
+      />
     </div>
   );
 };

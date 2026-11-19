@@ -1,7 +1,7 @@
 import React, { lazy, Suspense, useEffect, useState } from 'react';
 import { HashRouter, Route, Routes, useLocation } from 'react-router-dom';
 import Lenis from 'lenis';
-import { AnimatePresence, motion } from 'motion/react';
+import { motion } from 'motion/react';
 import { prefersReducedMotion } from './utils/webglHelpers';
 import { Header } from './components/Header';
 import { Footer } from './components/Footer';
@@ -102,33 +102,30 @@ const AppShell: React.FC = () => {
       <CustomCursor />
       <Header />
 
-      {/* Sapphire Light-Sweep Route Transition */}
-      <AnimatePresence mode="wait">
-        <motion.main
-          id="main-content"
-          key={location.pathname}
-          initial={reduced ? false : { opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={reduced ? undefined : { opacity: 0 }}
-          transition={{ duration: 0.32, ease: [0.22, 1, 0.36, 1] }}
-        >
-          <Suspense fallback={<RouteFallback />}>
-            <Routes location={location}>
-              <Route path="/" element={<HomePage />} />
-              <Route path="/gem-types" element={<GemTypesPage />} />
-              <Route path="/gems-of-sri-lanka" element={<GemsInSriLankaPage />} />
-              <Route path="/gem-industry" element={<GemIndustryPage />} />
-              <Route path="/global-market" element={<GlobalMarketPage />} />
-              <Route path="/products" element={<ProductsPage />} />
-              <Route path="/careers" element={<CareersPage />} />
-              <Route path="/inquiries" element={<InquiriesPage />} />
-              <Route path="/contact" element={<ContactPage />} />
-              <Route path="/about" element={<AboutPage />} />
-              <Route path="*" element={<NotFoundPage />} />
-            </Routes>
-          </Suspense>
-        </motion.main>
-      </AnimatePresence>
+      {/* Route Content */}
+      <motion.main
+        id="main-content"
+        key={location.pathname}
+        initial={reduced ? false : { opacity: 0.01 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
+      >
+        <Suspense fallback={<RouteFallback />}>
+          <Routes location={location}>
+            <Route path="/" element={<HomePage />} />
+            <Route path="/gem-types" element={<GemTypesPage />} />
+            <Route path="/gems-of-sri-lanka" element={<GemsInSriLankaPage />} />
+            <Route path="/gem-industry" element={<GemIndustryPage />} />
+            <Route path="/global-market" element={<GlobalMarketPage />} />
+            <Route path="/products" element={<ProductsPage />} />
+            <Route path="/careers" element={<CareersPage />} />
+            <Route path="/inquiries" element={<InquiriesPage />} />
+            <Route path="/contact" element={<ContactPage />} />
+            <Route path="/about" element={<AboutPage />} />
+            <Route path="*" element={<NotFoundPage />} />
+          </Routes>
+        </Suspense>
+      </motion.main>
 
       <Footer />
     </div>

@@ -22,7 +22,7 @@ import { MARKET_DESTINATIONS } from '../content/markets';
 import { prefersReducedMotion } from '../utils/webglHelpers';
 import { Gem3D } from '../components/Gem3D';
 import { GemParticles } from '../components/GemParticles';
-import { GemSVG } from '../components/GemSVG';
+import { GemSpecimenPhoto } from '../components/GemSpecimenPhoto';
 import { Globe } from '../components/Globe';
 import { ImageSlot } from '../components/ImageSlot';
 import { CountUpNumber, SplitHeading, TiltGemCard } from '../components/MotionPrimitives';
@@ -243,20 +243,20 @@ export const HomePage: React.FC = () => {
                   role="option"
                   aria-selected={selected}
                   onClick={() => setActiveCarouselIdx(idx)}
-                  className={`group flex flex-col items-center gap-2.5 border p-3 text-center transition-all duration-300 ${
+                  className={`group flex flex-col items-center gap-2 border p-3 text-center transition-all duration-300 ${
                     selected
                       ? 'border-[#3D7BFF] bg-[#1B3FD9]/25 shadow-[0_0_24px_rgba(61,123,255,0.22)]'
                       : 'border-[#C9D1DC]/15 bg-[#05070D]/55 hover:border-[#C9D1DC]/45'
                   }`}
                 >
-                  <GemSVG
-                    cut={gem.cut}
-                    colorHex={gem.colorHex}
-                    secondaryColorHex={gem.secondaryColorHex}
-                    effect={gem.effect}
-                    size={54}
-                    animateSparkle={selected}
-                    label={gem.name}
+                  <GemSpecimenPhoto
+                    src={gem.photoUrl}
+                    alt={gem.name}
+                    glowHex={gem.glowHex}
+                    tolerance={gem.matteTolerance}
+                    variant="thumb"
+                    showBackdrop={false}
+                    className="h-14 w-14"
                   />
                   <span className="line-clamp-1 text-[11px] tracking-[0.1em] uppercase text-[#E6EAF0]">
                     {gem.name.replace('Ceylon ', '')}
@@ -438,32 +438,37 @@ export const HomePage: React.FC = () => {
 
           <div className="mt-10 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
             {signaturePieces.map((stone) => (
-              <TiltGemCard key={stone.id} className="flex flex-col justify-between p-6">
-                <div className="flex items-start justify-between gap-4">
-                  <div>
-                    <p className="text-[11px] tracking-[0.18em] uppercase text-[#3D7BFF]">
+              <TiltGemCard key={stone.id} className="group flex flex-col justify-between p-0">
+                <div>
+                  <Link
+                    to={`/products?stone=${stone.id}`}
+                    className="relative block h-48 w-full border-b border-[#C9D1DC]/12"
+                  >
+                    <GemSpecimenPhoto
+                      src={stone.photoUrl}
+                      alt={stone.name}
+                      glowHex={stone.colorHex}
+                      tolerance={stone.matteTolerance}
+                      className="h-full w-full"
+                    />
+                    <span className="absolute left-4 top-3 z-20 text-[10px] tracking-[0.18em] uppercase text-[#C9D1DC]/80">
                       Sample Data · {stone.origin}
-                    </p>
-                    <h3 className="mt-2 font-display text-2xl font-light text-white">
+                    </span>
+                  </Link>
+                  <div className="p-6 pb-4">
+                    <h3 className="font-display text-2xl font-light text-white">
                       {stone.name}
                     </h3>
                     <p className="mt-1 text-xs text-[#C9D1DC]/75">
                       {stone.colourGrade} · {stone.caratRange}
                     </p>
                   </div>
-                  <GemSVG
-                    cut={stone.cut}
-                    colorHex={stone.colorHex}
-                    secondaryColorHex="#E6EAF0"
-                    size={76}
-                    label={stone.name}
-                  />
                 </div>
 
-                <div className="mt-6 flex items-center justify-between border-t border-[#C9D1DC]/12 pt-4">
+                <div className="mx-6 mb-6 flex items-center justify-between border-t border-[#C9D1DC]/12 pt-4">
                   <span className="text-xs text-[#C9D1DC]">{stone.priceLabel}</span>
                   <Link
-                    to="/products"
+                    to={`/products?stone=${stone.id}`}
                     className="inline-flex items-center gap-1.5 text-xs tracking-[0.16em] uppercase text-white hover:text-[#3D7BFF]"
                   >
                     <span>View product</span>
