@@ -22,66 +22,76 @@ export const SriLankaMap: React.FC<SriLankaMapProps> = ({ compact = false, onSel
 
   return (
     <div className="grid grid-cols-1 items-center gap-8 lg:grid-cols-12">
-      {/* Left: Interactive SVG Island Map */}
+      {/* Left: Interactive SVG Island Map using uploaded Sri Lanka outline */}
       <div className="relative flex items-center justify-center lg:col-span-6">
         <div
           aria-hidden="true"
-          className="pointer-events-none absolute h-72 w-72 rounded-full bg-[#1B3FD9]/20 blur-3xl"
+          className="pointer-events-none absolute h-80 w-80 rounded-full bg-[#1B3FD9]/22 blur-3xl"
         />
         <svg
-          viewBox="0 0 400 620"
-          className={`relative z-10 w-full ${compact ? 'max-w-[300px]' : 'max-w-[380px]'} overflow-visible`}
+          viewBox="410 60 1240 1900"
+          className={`relative z-10 w-full ${compact ? 'max-w-[320px]' : 'max-w-[400px]'} overflow-visible`}
           role="img"
           aria-label="Map of Sri Lanka showing five major gem-producing areas"
         >
           <defs>
-            <linearGradient id="sl-outline" x1="0" y1="0" x2="1" y2="1">
-              <stop offset="0%" stopColor="#E6EAF0" stopOpacity="0.65" />
-              <stop offset="50%" stopColor="#3D7BFF" stopOpacity="0.85" />
-              <stop offset="100%" stopColor="#C9D1DC" stopOpacity="0.45" />
-            </linearGradient>
-            <radialGradient id="sl-highland" cx="52%" cy="62%" r="34%">
-              <stop offset="0%" stopColor="#1B3FD9" stopOpacity="0.35" />
+            <radialGradient id="sl-highland" cx="50%" cy="62%" r="36%">
+              <stop offset="0%" stopColor="#1B3FD9" stopOpacity="0.42" />
+              <stop offset="55%" stopColor="#0B1F6B" stopOpacity="0.2" />
               <stop offset="100%" stopColor="#05070D" stopOpacity="0" />
             </radialGradient>
+            <filter id="sl-map-glow" x="-15%" y="-15%" width="130%" height="130%">
+              <feDropShadow dx="0" dy="0" stdDeviation="14" floodColor="#3D7BFF" floodOpacity="0.55" />
+            </filter>
           </defs>
 
-          {/* Stylized silhouette of Sri Lanka */}
-          <path
-            d="M172,48 L194,54 L208,76 L222,115 L254,162 L276,216 L296,268 L314,322 L322,380 L312,438 L292,486 L254,530 L212,554 L172,562 L134,552 L110,518 L100,468 L98,412 L106,356 L104,296 L118,242 L132,190 L138,136 L148,86 Z"
-            fill="url(#sl-highland)"
-            stroke="url(#sl-outline)"
-            strokeWidth="1.6"
+          {/* Highland Complex ambient glow inside island center */}
+          <ellipse cx="1010" cy="1280" rx="410" ry="590" fill="url(#sl-highland)" />
+
+          {/* Uploaded Sri Lanka Outline Vector Asset */}
+          <image
+            href="/assets/aistudio/Frame_3646_1_fb372d20.svg"
+            x="0"
+            y="0"
+            width="2065"
+            height="2023"
+            preserveAspectRatio="none"
+            style={{
+              filter: 'brightness(1.22) saturate(1.18) drop-shadow(0 0 18px rgba(61,123,255,0.52))',
+            }}
           />
 
           {/* Abstract Highland Complex contour ring */}
           <ellipse
-            cx="206"
-            cy="392"
-            rx="72"
-            ry="96"
+            cx="995"
+            cy="1275"
+            rx="235"
+            ry="335"
             fill="none"
             stroke="#3D7BFF"
-            strokeOpacity="0.28"
-            strokeDasharray="4 6"
+            strokeOpacity="0.34"
+            strokeWidth="4"
+            strokeDasharray="16 20"
           />
 
-          {/* Connecting energy lines from Ratnapura / Highland hub */}
+          {/* Connecting energy lines from Central Highland hub */}
           {SRI_LANKA_REGIONS.map((region) => (
             <line
               key={`line-${region.id}`}
-              x1={205}
-              y1={392}
+              x1={995}
+              y1={1235}
               x2={region.coords.x}
               y2={region.coords.y}
-              stroke={region.id === activeId ? '#3D7BFF' : 'rgba(201,209,220,0.22)'}
-              strokeWidth={region.id === activeId ? 1.4 : 0.8}
+              stroke={region.id === activeId ? '#3D7BFF' : 'rgba(201,209,220,0.28)'}
+              strokeWidth={region.id === activeId ? 4.5 : 2.2}
             />
           ))}
 
           {/* Interactive Gem Region Nodes */}
           {SRI_LANKA_REGIONS.map((region) => {
             const isActive = region.id === activeId;
+            const labelRight = region.id === 'ratnapura' || region.coords.x >= 995;
+            const labelDy = region.id === 'ratnapura' ? 22 : 12;
             return (
               <g
                 key={region.id}
@@ -89,21 +99,30 @@ export const SriLankaMap: React.FC<SriLankaMapProps> = ({ compact = false, onSel
                 className="cursor-pointer"
               >
                 <circle
-                  r={isActive ? 22 : 14}
+                  r={isActive ? 66 : 42}
                   fill="#3D7BFF"
-                  fillOpacity={isActive ? 0.22 : 0.08}
+                  fillOpacity={isActive ? 0.24 : 0.09}
                   className="transition-all duration-300"
                 />
+                {isActive && (
+                  <circle
+                    r={44}
+                    fill="none"
+                    stroke="#3D7BFF"
+                    strokeOpacity={0.55}
+                    strokeWidth="2.5"
+                  />
+                )}
                 <circle
-                  r={isActive ? 7 : 5}
+                  r={isActive ? 20 : 14}
                   fill={isActive ? '#FFFFFF' : '#3D7BFF'}
                   stroke="#E6EAF0"
-                  strokeWidth="1.5"
+                  strokeWidth="4"
                 />
 
-                {/* Floating miniature SVG gem emerging on active node */}
+                {/* Floating miniature SVG gem emerging above active node */}
                 {isActive && (
-                  <g transform="translate(-22, -52)">
+                  <g transform="translate(-62, -148) scale(2.8)">
                     <GemSVG
                       cut={region.featuredGemCut}
                       colorHex={region.featuredGemColor}
@@ -115,10 +134,12 @@ export const SriLankaMap: React.FC<SriLankaMapProps> = ({ compact = false, onSel
                 )}
 
                 <text
-                  x={region.coords.x > 215 ? 14 : -14}
-                  y={4}
-                  textAnchor={region.coords.x > 215 ? 'start' : 'end'}
-                  className="fill-[#E6EAF0] text-[12px] font-medium tracking-wider"
+                  x={labelRight ? 38 : -38}
+                  y={labelDy}
+                  textAnchor={labelRight ? 'start' : 'end'}
+                  fontSize="36"
+                  letterSpacing="1.6"
+                  className="fill-[#E6EAF0] font-medium"
                   style={{ fontFamily: 'var(--font-sans)' }}
                 >
                   {region.name}
@@ -126,7 +147,7 @@ export const SriLankaMap: React.FC<SriLankaMapProps> = ({ compact = false, onSel
 
                 {/* Accessible hit area */}
                 <circle
-                  r={24}
+                  r={78}
                   fill="transparent"
                   role="button"
                   tabIndex={0}

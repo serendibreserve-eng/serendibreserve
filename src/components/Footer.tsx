@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { MessageCircle, Phone, MapPin, Mail } from 'lucide-react';
+import { Phone, MapPin, Mail } from 'lucide-react';
 import { FOOTER_NAV_LINKS, PLACEHOLDERS, SITE_CONFIG } from '../content/siteConfig';
 import { SerendibCrest } from './SerendibCrest';
 import { GemSVG } from './GemSVG';
@@ -110,25 +110,12 @@ export const Footer: React.FC = () => {
 
           <div className="hairline-silver my-10" />
 
-          <div className="flex flex-col justify-between gap-4 text-xs text-[#C9D1DC]/65 sm:flex-row sm:items-center">
+      <div className="flex flex-col justify-between gap-4 text-xs text-[#C9D1DC]/65 sm:flex-row sm:items-center">
             <p>{SITE_CONFIG.copyright}</p>
             <p className="max-w-xl sm:text-right">{SITE_CONFIG.legalNote}</p>
           </div>
         </div>
       </footer>
-
-      {/* Compact Sticky Floating WhatsApp / Call Control */}
-      <a
-        href={SITE_CONFIG.whatsappHref}
-        target="_blank"
-        rel="noopener noreferrer"
-        aria-label={`Message or call Serendib Reserve on WhatsApp ${SITE_CONFIG.phone}`}
-        className="fixed bottom-4 right-4 z-40 inline-flex h-11 items-center gap-2 border border-[#3D7BFF]/65 bg-[#0A1226]/95 px-3.5 text-xs font-medium tracking-[0.12em] uppercase text-white shadow-[0_0_24px_rgba(27,63,217,0.35)] transition-transform duration-200 hover:-translate-y-0.5 hover:border-[#E6EAF0]"
-      >
-        <MessageCircle size={15} className="text-[#3D7BFF]" aria-hidden="true" />
-        <span className="hidden sm:inline font-mono-tabular">{SITE_CONFIG.phone}</span>
-        <span className="sm:hidden">WhatsApp</span>
-      </a>
     </>
   );
 };

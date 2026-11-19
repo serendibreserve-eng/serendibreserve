@@ -14,7 +14,6 @@ import {
   ShieldCheck,
   Sparkles,
 } from 'lucide-react';
-import { GEMS_DATA } from '../content/gems';
 import { GEM_IMAGES } from '../content/images';
 import { SAMPLE_CATALOGUE } from '../content/products';
 import { LIVE_STATS, PLACEHOLDERS, SITE_CONFIG, TRUST_PILLARS } from '../content/siteConfig';
@@ -23,6 +22,8 @@ import { prefersReducedMotion } from '../utils/webglHelpers';
 import { Gem3D } from '../components/Gem3D';
 import { GemParticles } from '../components/GemParticles';
 import { GemSpecimenPhoto } from '../components/GemSpecimenPhoto';
+import { HeroLogoStage } from '../components/HeroLogoStage';
+import { CollectionShowcaseStage } from '../components/CollectionShowcaseStage';
 import { Globe } from '../components/Globe';
 import { ImageSlot } from '../components/ImageSlot';
 import { CountUpNumber, SplitHeading, TiltGemCard } from '../components/MotionPrimitives';
@@ -30,8 +31,6 @@ import { PageSEO } from '../components/PageSEO';
 import { SriLankaMap } from '../components/SriLankaMap';
 
 gsap.registerPlugin(ScrollTrigger);
-
-const CAROUSEL_GEMS = GEMS_DATA.filter((g) => g.featuredInCarousel);
 
 const EARTH_TO_LIGHT_STEPS = [
   { step: '01', title: 'Mine', subtitle: 'Licensed Ceylon gravels', cut: 'rough' as const, color: '#1B3FD9' },
@@ -45,10 +44,8 @@ export const HomePage: React.FC = () => {
   const navigate = useNavigate();
   const heroSectionRef = useRef<HTMLElement>(null);
   const [heroScale, setHeroScale] = useState(1);
-  const [activeCarouselIdx, setActiveCarouselIdx] = useState(0);
   const [activeStageIdx, setActiveStageIdx] = useState(3);
 
-  const activeCarouselGem = CAROUSEL_GEMS[activeCarouselIdx] || CAROUSEL_GEMS[0];
   const activeStage = EARTH_TO_LIGHT_STEPS[activeStageIdx] || EARTH_TO_LIGHT_STEPS[0];
 
   useEffect(() => {
@@ -81,7 +78,7 @@ export const HomePage: React.FC = () => {
       {/* a) HERO (100vh) */}
       <section
         ref={heroSectionRef}
-        className="relative flex min-h-screen items-center overflow-hidden bg-[#05070D] pt-20 pb-16 lg:pb-0"
+        className="relative flex min-h-screen items-center overflow-hidden bg-[#05070D] pt-[70px] pb-24 lg:pt-20 lg:pb-0"
       >
         {/* Volumetric royal-blue aurora + subtle silk atmospheric backdrop */}
         <div aria-hidden="true" className="pointer-events-none absolute inset-0">
@@ -101,15 +98,15 @@ export const HomePage: React.FC = () => {
 
         <GemParticles density={42} tintHex="#3D7BFF" />
 
-        <div className="relative z-10 mx-auto grid w-full max-w-[1440px] grid-cols-1 items-center gap-6 px-4 py-8 sm:px-8 lg:grid-cols-12 lg:gap-8 lg:py-12">
+        <div className="relative z-10 mx-auto grid w-full max-w-[1440px] grid-cols-1 items-center gap-4 px-4 py-4 sm:gap-6 sm:px-8 sm:py-8 lg:grid-cols-12 lg:gap-6 lg:py-12">
           {/* Left Editorial Minimal Copy */}
-          <div className="order-2 space-y-5 lg:order-1 lg:col-span-6 lg:space-y-6">
+          <div className="order-2 space-y-3.5 sm:space-y-5 lg:order-1 lg:col-span-5 lg:space-y-6">
             <p className="text-xs font-medium tracking-[0.24em] uppercase text-[#C9D1DC]">
               {SITE_CONFIG.shortName} · COLOMBO, SRI LANKA
             </p>
             <SplitHeading
               as="h1"
-              className="font-display text-4xl font-light leading-[1.04] tracking-tight text-white sm:text-6xl xl:text-7xl"
+              className="font-display text-4xl font-light leading-[1.04] tracking-tight text-white sm:text-6xl xl:text-[64px]"
             >
               {SITE_CONFIG.taglineHero}
             </SplitHeading>
@@ -117,38 +114,26 @@ export const HomePage: React.FC = () => {
               {SITE_CONFIG.positioning}. Curated Ceylon sapphires and collector rarities, faceted for pure light.
             </p>
 
-            <div className="flex flex-wrap items-center gap-3.5 pt-2">
+            <div className="flex flex-wrap items-center gap-3 pt-1 sm:gap-3.5 sm:pt-2">
               <Link
                 to="/gem-types"
-                className="btn-luxury-primary inline-flex items-center gap-2.5 px-6 py-3.5 text-xs font-medium tracking-[0.18em] uppercase text-white sm:px-7"
+                className="btn-luxury-primary inline-flex items-center gap-2.5 px-5 py-3 text-xs font-medium tracking-[0.18em] uppercase text-white sm:px-7 sm:py-3.5"
               >
                 <span>Explore Our Gems</span>
                 <ArrowRight size={14} aria-hidden="true" />
               </Link>
               <Link
                 to="/inquiries"
-                className="btn-luxury inline-flex items-center gap-2.5 px-6 py-3.5 text-xs font-medium tracking-[0.18em] uppercase text-[#E6EAF0] sm:px-7"
+                className="btn-luxury inline-flex items-center gap-2.5 px-5 py-3 text-xs font-medium tracking-[0.18em] uppercase text-[#E6EAF0] sm:px-7 sm:py-3.5"
               >
                 <span>Make an Inquiry</span>
               </Link>
             </div>
           </div>
 
-          {/* Right/Center Hero Animated 3D Cushion Ceylon Sapphire */}
-          <div className="order-1 relative flex h-[250px] items-center justify-center sm:h-[380px] lg:order-2 lg:col-span-6 lg:h-[560px]">
-            <Gem3D
-              cut="cushion"
-              colour="#1B3FD9"
-              secondaryColour="#3D7BFF"
-              size={1.38}
-              externalScale={heroScale}
-              rotationSpeed={0.32}
-              floatAmplitude={0.06}
-              glow
-              showCausticPlane
-              className="h-full w-full"
-              ariaLabel="Animated 3D Ceylon Royal Blue Cushion Sapphire"
-            />
+          {/* Right Hero Stage: Shining Original Logo beside Big 3D Ceylon Sapphire + Moving Gems */}
+          <div className="order-1 lg:order-2 lg:col-span-7">
+            <HeroLogoStage heroScale={heroScale} />
           </div>
         </div>
 
@@ -165,108 +150,7 @@ export const HomePage: React.FC = () => {
       </section>
 
       {/* b) GEM CAROUSEL — THE COLLECTION */}
-      <section
-        className="relative overflow-hidden border-t border-[#C9D1DC]/12 py-24 transition-colors duration-700"
-        style={{
-          background: `radial-gradient(circle at 50% 42%, ${activeCarouselGem.glowHex}24 0%, #0A1226 55%, #05070D 100%)`,
-        }}
-      >
-        <div className="mx-auto max-w-[1440px] px-4 sm:px-8">
-          <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
-            <div>
-              <p className="text-xs tracking-[0.26em] uppercase text-[#C9D1DC]/75">
-                01 · The Collection
-              </p>
-              <SplitHeading className="mt-2 font-display text-4xl font-light text-white sm:text-5xl">
-                {SITE_CONFIG.taglineSecondary}
-              </SplitHeading>
-            </div>
-            <Link
-              to="/gem-types"
-              className="inline-flex items-center gap-2 text-xs tracking-[0.18em] uppercase text-[#C9D1DC] hover:text-white"
-            >
-              <span>All 17+ Varieties</span>
-              <ArrowRight size={14} aria-hidden="true" />
-            </Link>
-          </div>
-
-          {/* Stage: Active 3D Gem + Selector Strip */}
-          <div className="mt-12 grid grid-cols-1 items-center gap-8 border border-[#C9D1DC]/15 bg-[#05070D]/60 p-6 sm:p-10 lg:grid-cols-12">
-            <div className="h-[290px] sm:h-[360px] lg:col-span-6">
-              <Gem3D
-                cut={activeCarouselGem.cut}
-                colour={activeCarouselGem.colorHex}
-                secondaryColour={activeCarouselGem.secondaryColorHex}
-                effect={activeCarouselGem.effect}
-                ior={1.76}
-                size={1.38}
-                rotationSpeed={0.42}
-                showCausticPlane
-                className="h-full w-full"
-                ariaLabel={`${activeCarouselGem.name} 3D showcase`}
-              />
-            </div>
-
-            <div className="space-y-5 lg:col-span-6">
-              <p className="text-xs tracking-[0.22em] uppercase text-[#3D7BFF]">
-                {activeCarouselGem.category} · Mohs {activeCarouselGem.hardnessMohs}
-              </p>
-              <h3 className="font-display text-4xl font-light text-white sm:text-5xl">
-                {activeCarouselGem.name}
-              </h3>
-              <p className="text-base text-[#C9D1DC]">{activeCarouselGem.oneLineCaption}</p>
-              <div className="pt-2">
-                <button
-                  type="button"
-                  onClick={() => navigate(`/gem-types?gem=${activeCarouselGem.id}`)}
-                  className="btn-luxury inline-flex items-center gap-2.5 px-6 py-3 text-xs tracking-[0.18em] uppercase text-white"
-                >
-                  <span>Inspect Species</span>
-                  <ArrowRight size={14} aria-hidden="true" />
-                </button>
-              </div>
-            </div>
-          </div>
-
-          {/* Horizontal 8-Gem Carousel Cards */}
-          <div
-            className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-8"
-            role="listbox"
-            aria-label="Select a featured Ceylon gemstone"
-          >
-            {CAROUSEL_GEMS.map((gem, idx) => {
-              const selected = idx === activeCarouselIdx;
-              return (
-                <button
-                  key={gem.id}
-                  type="button"
-                  role="option"
-                  aria-selected={selected}
-                  onClick={() => setActiveCarouselIdx(idx)}
-                  className={`group flex flex-col items-center gap-2 border p-3 text-center transition-all duration-300 ${
-                    selected
-                      ? 'border-[#3D7BFF] bg-[#1B3FD9]/25 shadow-[0_0_24px_rgba(61,123,255,0.22)]'
-                      : 'border-[#C9D1DC]/15 bg-[#05070D]/55 hover:border-[#C9D1DC]/45'
-                  }`}
-                >
-                  <GemSpecimenPhoto
-                    src={gem.photoUrl}
-                    alt={gem.name}
-                    glowHex={gem.glowHex}
-                    tolerance={gem.matteTolerance}
-                    variant="thumb"
-                    showBackdrop={false}
-                    className="h-14 w-14"
-                  />
-                  <span className="line-clamp-1 text-[11px] tracking-[0.1em] uppercase text-[#E6EAF0]">
-                    {gem.name.replace('Ceylon ', '')}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
-        </div>
-      </section>
+      <CollectionShowcaseStage onInspectGem={(gemId) => navigate(`/gem-types?gem=${gemId}`)} />
 
       {/* c) ISLAND OF GEMS */}
       <section className="border-t border-[#C9D1DC]/12 bg-[#05070D] py-24">

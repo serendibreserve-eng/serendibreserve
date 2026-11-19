@@ -515,7 +515,7 @@ export interface SriLankaRegion {
   name: string;
   title: string;
   depositType: string;
-  coords: { x: number; y: number }; // percentage on map SVG viewBox 0..400 x 0..640
+  coords: { x: number; y: number }; // coordinate in Frame_3646_1_fb372d20.svg canvas (2065 x 2023)
   gems: string[];
   description: string;
   featuredGemCut: GemCut;
@@ -528,7 +528,7 @@ export const SRI_LANKA_REGIONS: SriLankaRegion[] = [
     name: 'Ratnapura',
     title: 'The City of Gems',
     depositType: 'Alluvial river gravels (Illama)',
-    coords: { x: 164, y: 458 },
+    coords: { x: 885, y: 1545 },
     gems: ['Blue Sapphire', 'Padparadscha', 'Star Sapphire', 'Ruby', 'Alexandrite', "Cat's Eye"],
     description:
       'The historic gem capital of Sri Lanka, where ancient riverbeds carry water-worn crystals washed down from the central Highland Complex over millennia.',
@@ -540,7 +540,7 @@ export const SRI_LANKA_REGIONS: SriLankaRegion[] = [
     name: 'Elahera',
     title: 'Central-North Gem Field',
     depositType: 'Eluvial & alluvial gravels',
-    coords: { x: 222, y: 278 },
+    coords: { x: 1085, y: 925 },
     gems: ['Blue Sapphire', 'Spinel', 'Chrysoberyl', 'Garnet', 'Tourmaline'],
     description:
       'Renowned along the Amban Ganga basin for richly saturated sapphires, bright red and cobalt spinels, chrysoberyls, and fine garnet crystals.',
@@ -552,7 +552,7 @@ export const SRI_LANKA_REGIONS: SriLankaRegion[] = [
     name: 'Okkampitiya',
     title: 'South-Eastern Frontier',
     depositType: 'Residual & shallow alluvial beds',
-    coords: { x: 274, y: 432 },
+    coords: { x: 1295, y: 1415 },
     gems: ['Blue Sapphire', 'Spinel', 'Hessonite Garnet', 'Zircon'],
     description:
       'Located in Moneragala District, noted for residual gem-bearing layers yielding sharp sapphire crystals, star stones, and vivid spinels.',
@@ -564,7 +564,7 @@ export const SRI_LANKA_REGIONS: SriLankaRegion[] = [
     name: 'Matale & Balangoda',
     title: 'Highland Complex Belt',
     depositType: 'Highland metamorphic & valley gravels',
-    coords: { x: 205, y: 392 },
+    coords: { x: 995, y: 1235 },
     gems: ['Padparadscha', 'Blue Sapphire', 'Ruby', 'Moonstone', 'Topaz'],
     description:
       'Spanning central highland ridges and southern foothills, home to rare lotus-hued padparadscha finds and historic metamorphic mineral occurrences.',
@@ -576,7 +576,7 @@ export const SRI_LANKA_REGIONS: SriLankaRegion[] = [
     name: 'Kalutara – Beruwala Belt',
     title: 'Coastal Trading & Lapidary Corridor',
     depositType: 'Coastal alluvial & historic trading hub',
-    coords: { x: 112, y: 468 },
+    coords: { x: 655, y: 1495 },
     gems: ['Moonstone (Meetiyagoda)', 'Blue Sapphire', 'Chrysoberyl', 'Spinel'],
     description:
       'Sri Lanka’s western coastal belt links traditional gem pits with Beruwala’s renowned gem markets and cutting workshops stretching toward Meetiyagoda.',

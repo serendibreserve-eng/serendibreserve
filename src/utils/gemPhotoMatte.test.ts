@@ -1,6 +1,10 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { extractGemSpecimenRGBA, findCaptionCutoffRow } from './gemPhotoMatte';
+import {
+  extractDarkLogoRGBA,
+  extractGemSpecimenRGBA,
+  findCaptionCutoffRow,
+} from './gemPhotoMatte';
 
 function makeSolidRGBA(w: number, h: number, r: number, g: number, b: number): Uint8ClampedArray {
   const arr = new Uint8ClampedArray(w * h * 4);
@@ -65,3 +69,36 @@ test('extractGemSpecimenRGBA removes outer light backdrop and preserves inner wh
   assert.equal(res.cropWidth, 20);
   assert.equal(res.cropHeight, 20);
 });
+
+test('extractDarkLogoRGBA removes outer black backdrop and lower text counters while keeping enclosed dark emblem details', () => {
+  const w = 40;
+  const h = 40;
+  const img = makeSolidRGBA(w, h, 0, 0, 0);
+
+  // Upper emblem ring (white outer ring, sapphire core, enclosed black inner eye detail)
+  fillRect(img, w, 12, 5, 28, 21, 255, 255, 255);
+  fillRect(img, w, 15, 8, 25, 18, 24, 64, 218);
+  fillRect(img, w, 19, 12, 21, 14, 4, 4, 4);
+
+  // Lower white letter loop (rows 26..35) with enclosed black counter hole
+  fillRect(img, w, 10, 26, 30, 36, 255, 255, 255);
+  fillRect(img, w, 15, 29, 25, 33, 2, 2, 2);
+
+  const res = extractDarkLogoRGBA(img, w, h);
+  // Outer corner cleared
+  assert.equal(res.output[3], 0);
+  // White mane border kept opaque
+  assert.equal(res.output[(6 * w + 14) * 4 + 3], 255);
+  // Sapphire center kept opaque
+  assert.equal(res.output[(10 * w + 17) * 4 + 3], 255);
+  // Enclosed black facial dot inside upper emblem preserved
+  assert.equal(res.output[(13 * w + 20) * 4 + 3], 255);
+  // Enclosed black counter inside lower wordmark cleared
+  assert.equal(res.output[(31 * w + 20) * 4 + 3], 0);
+  // Tightly cropped to visible artwork
+  assert.equal(res.cropX, 10);
+  assert.equal(res.cropY, 5);
+  assert.equal(res.cropWidth, 20);
+  assert.equal(res.cropHeight, 31);
+});
+

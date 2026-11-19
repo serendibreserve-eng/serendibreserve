@@ -1,9 +1,13 @@
 
+import 'dotenv/config';
 import express from 'express';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { handleChatRequest } from './server/geminiChat.mjs';
 
 const app = express();
+app.use(express.json({ limit: '1mb' }));
+app.post('/api/chat', handleChatRequest);
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);

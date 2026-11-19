@@ -335,3 +335,163 @@ export function extractGemSpecimenRGBA(
     cropHeight: maxY - minY + 1,
   };
 }
+
+/**
+ * Extracts a bright/colored logo (e.g. white mane + royal sapphire + wordmark)
+ * from a pure black (#000000) background using edge-connected dark BFS flood fill
+ * plus counter cleanup inside the lower text band, while preserving internal
+ * enclosed dark facial details in the upper crest.
+ */
+export function extractDarkLogoRGBA(
+  rgba: Uint8ClampedArray,
+  width: number,
+  height: number,
+  options: { darkThreshold?: number; featherRange?: number; textBandRatio?: number } = {},
+): {
+  output: Uint8ClampedArray;
+  cropX: number;
+  cropY: number;
+  cropWidth: number;
+  cropHeight: number;
+} {
+  if (width <= 0 || height <= 0) {
+    return {
+      output: new Uint8ClampedArray(rgba),
+      cropX: 0,
+      cropY: 0,
+      cropWidth: width,
+      cropHeight: height,
+    };
+  }
+
+  const darkMax = options.darkThreshold ?? 28;
+  const featherRange = options.featherRange ?? 34;
+  const textBandStartY = Math.floor(height * (options.textBandRatio ?? 0.56));
+
+  const output = new Uint8ClampedArray(rgba);
+  const total = width * height;
+  const visited = new Uint8Array(total);
+  const bgMask = new Uint8Array(total);
+
+  const isDarkBackdrop = (r: number, g: number, b: number): boolean => {
+    const chMax = Math.max(r, g, b);
+    const lum = 0.299 * r + 0.587 * g + 0.114 * b;
+    return chMax <= darkMax && lum <= darkMax;
+  };
+
+  const queue = new Int32Array(total);
+  let qHead = 0;
+  let qTail = 0;
+
+  const trySeed = (x: number, y: number) => {
+    const p = y * width + x;
+    if (visited[p]) return;
+    visited[p] = 1;
+    const i = p * 4;
+    if (output[i + 3] === 0 || isDarkBackdrop(output[i], output[i + 1], output[i + 2])) {
+      bgMask[p] = 1;
+      queue[qTail++] = p;
+    }
+  };
+
+  for (let x = 0; x < width; x++) {
+    trySeed(x, 0);
+    if (height > 1) trySeed(x, height - 1);
+  }
+  for (let y = 0; y < height; y++) {
+    trySeed(0, y);
+    if (width > 1) trySeed(width - 1, y);
+  }
+
+  while (qHead < qTail) {
+    const p = queue[qHead++];
+    const px = p % width;
+    const py = (p - px) / width;
+
+    const neighbors = [
+      px > 0 ? p - 1 : -1,
+      px + 1 < width ? p + 1 : -1,
+      py > 0 ? p - width : -1,
+      py + 1 < height ? p + width : -1,
+    ];
+
+    for (let n = 0; n < 4; n++) {
+      const np = neighbors[n];
+      if (np < 0 || visited[np]) continue;
+      visited[np] = 1;
+      const i = np * 4;
+      if (isDarkBackdrop(output[i], output[i + 1], output[i + 2])) {
+        bgMask[np] = 1;
+        queue[qTail++] = np;
+      }
+    }
+  }
+
+  // Also clear enclosed black counters inside lower lettering (e.g. R, D, B)
+  for (let y = textBandStartY; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+      const p = y * width + x;
+      if (bgMask[p]) continue;
+      const i = p * 4;
+      if (isDarkBackdrop(output[i], output[i + 1], output[i + 2])) {
+        bgMask[p] = 1;
+      }
+    }
+  }
+
+  let minX = width;
+  let minY = height;
+  let maxX = -1;
+  let maxY = -1;
+
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+      const p = y * width + x;
+      const i = p * 4;
+      if (bgMask[p]) {
+        output[i + 3] = 0;
+        continue;
+      }
+
+      // Soften + recover anti-aliased bright rim pixels adjacent to cleared black space
+      let bgAdj = 0;
+      if (x > 0 && bgMask[p - 1]) bgAdj++;
+      if (x + 1 < width && bgMask[p + 1]) bgAdj++;
+      if (y > 0 && bgMask[p - width]) bgAdj++;
+      if (y + 1 < height && bgMask[p + width]) bgAdj++;
+
+      if (bgAdj > 0) {
+        const chMax = Math.max(output[i], output[i + 1], output[i + 2]);
+        if (chMax < darkMax + featherRange) {
+          const factor = Math.max(0.08, Math.min(1, (chMax - darkMax * 0.35) / featherRange));
+          output[i + 3] = Math.round(output[i + 3] * factor);
+          // Un-premultiply over pure black background (C_obs = alpha * C_fg)
+          const invFactor = 1 / Math.max(0.32, factor);
+          output[i] = Math.min(255, Math.round(output[i] * invFactor));
+          output[i + 1] = Math.min(255, Math.round(output[i + 1] * invFactor));
+          output[i + 2] = Math.min(255, Math.round(output[i + 2] * invFactor));
+        }
+      }
+
+      if (output[i + 3] > 20) {
+        if (x < minX) minX = x;
+        if (y < minY) minY = y;
+        if (x > maxX) maxX = x;
+        if (y > maxY) maxY = y;
+      }
+    }
+  }
+
+  if (maxX < minX || maxY < minY) {
+    return { output, cropX: 0, cropY: 0, cropWidth: width, cropHeight: height };
+  }
+
+  return {
+    output,
+    cropX: minX,
+    cropY: minY,
+    cropWidth: maxX - minX + 1,
+    cropHeight: maxY - minY + 1,
+  };
+}
+

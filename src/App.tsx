@@ -5,6 +5,7 @@ import { motion } from 'motion/react';
 import { prefersReducedMotion } from './utils/webglHelpers';
 import { Header } from './components/Header';
 import { Footer } from './components/Footer';
+import { GeminiChatWidget } from './components/GeminiChatWidget';
 import { GemSVG } from './components/GemSVG';
 import { CustomCursor, GemLoadingScreen } from './components/MotionPrimitives';
 
@@ -128,6 +129,7 @@ const AppShell: React.FC = () => {
       </motion.main>
 
       <Footer />
+      <GeminiChatWidget />
     </div>
   );
 };
