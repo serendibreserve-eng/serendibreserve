@@ -1,0 +1,595 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Global default-deny safety net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // ------------------------------------------------------------------
+    // Shared Hardened Primitives
+    // ------------------------------------------------------------------
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function isValidEmail(email) {
+      return email is string && email.size() >= 5 && email.size() <= 160 && email.matches('^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isEmailVerified() {
+      return isSignedIn() && request.auth.token.email_verified == true;
+    }
+
+    function isBootstrapAdmin() {
+      return isEmailVerified() && request.auth.token.email == 'serendibreserve@gmail.com';
+    }
+
+    function isAdmin() {
+      return isBootstrapAdmin() || (
+        isEmailVerified() && exists(/databases/$(database)/documents/admins/$(request.auth.uid))
+      );
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isValidCurrency(c) {
+      return c in ['USD', 'LKR', 'EUR', 'GBP', 'AED', 'SGD', 'CNY'];
+    }
+
+    function isValidNotificationPrefs(prefs) {
+      return prefs is map
+        && prefs.keys().hasAll(['emailReminders', 'outbidAlerts', 'newAuctionAlerts', 'liveStartAlerts'])
+        && prefs.keys().hasOnly(['emailReminders', 'outbidAlerts', 'newAuctionAlerts', 'liveStartAlerts'])
+        && prefs.emailReminders is bool
+        && prefs.outbidAlerts is bool
+        && prefs.newAuctionAlerts is bool
+        && prefs.liveStartAlerts is bool;
+    }
+
+    function isValidUserProfile(data, userId) {
+      return data.keys().hasAll([
+          'uid', 'fullName', 'email', 'contactNumber', 'nationality', 'companyName',
+          'photoURL', 'authProvider', 'role', 'accountStatus', 'emailVerified',
+          'profileCompleted', 'watchlistAuctionIds', 'notificationPreferences',
+          'createdAt', 'updatedAt'
+        ])
+        && data.keys().hasOnly([
+          'uid', 'fullName', 'email', 'contactNumber', 'nationality', 'companyName',
+          'photoURL', 'authProvider', 'role', 'accountStatus', 'emailVerified',
+          'profileCompleted', 'watchlistAuctionIds', 'notificationPreferences',
+          'createdAt', 'updatedAt'
+        ])
+        && data.uid is string && data.uid == userId && isValidId(data.uid)
+        && data.fullName is string && data.fullName.size() >= 1 && data.fullName.size() <= 120
+        && isValidEmail(data.email)
+        && data.contactNumber is string && data.contactNumber.size() <= 40
+        && data.nationality is string && data.nationality.size() <= 80
+        && data.companyName is string && data.companyName.size() <= 120
+        && data.photoURL is string && data.photoURL.size() <= 500
+        && data.authProvider in ['google', 'password']
+        && data.role in ['user', 'admin']
+        && data.accountStatus in ['active', 'pending_verification', 'suspended']
+        && data.emailVerified is bool
+        && data.profileCompleted is bool
+        && data.watchlistAuctionIds is list && data.watchlistAuctionIds.size() <= 100
+        && (data.watchlistAuctionIds.size() == 0 || (data.watchlistAuctionIds[0] is string && data.watchlistAuctionIds[0].size() <= 128))
+        && isValidNotificationPrefs(data.notificationPreferences)
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidAdminMarker(data, userId) {
+      return data.keys().hasAll(['uid', 'email', 'grantedBy', 'createdAt'])
+        && data.keys().hasOnly(['uid', 'email', 'grantedBy', 'createdAt'])
+        && data.uid is string && data.uid == userId && isValidId(data.uid)
+        && isValidEmail(data.email)
+        && data.grantedBy is string && data.grantedBy.size() >= 1 && data.grantedBy.size() <= 128
+        && data.createdAt == request.time;
+    }
+
+    function isValidAuction(data) {
+      return data.keys().hasAll([
+          'lotCode', 'title', 'gemstoneType', 'origin', 'caratWeight', 'cutShape',
+          'colorGrade', 'clarity', 'treatment', 'certification', 'certificateNumber',
+          'dimensions', 'description', 'currency', 'startingBidMinor', 'minimumIncrementMinor',
+          'reservePriceMinor', 'showReservePrice', 'reserveMet', 'currentHighestBidMinor',
+          'highestBidderId', 'highestBidderAlias', 'bidCount', 'uniqueBiddersCount',
+          'status', 'resultStatus', 'startTime', 'endTime', 'featured', 'liveStreamUrl',
+          'auctionRules', 'images', 'createdBy', 'createdAt', 'updatedAt'
+        ])
+        && data.keys().hasOnly([
+          'lotCode', 'title', 'gemstoneType', 'origin', 'caratWeight', 'cutShape',
+          'colorGrade', 'clarity', 'treatment', 'certification', 'certificateNumber',
+          'dimensions', 'description', 'currency', 'startingBidMinor', 'minimumIncrementMinor',
+          'reservePriceMinor', 'showReservePrice', 'reserveMet', 'currentHighestBidMinor',
+          'highestBidderId', 'highestBidderAlias', 'bidCount', 'uniqueBiddersCount',
+          'status', 'resultStatus', 'startTime', 'endTime', 'featured', 'liveStreamUrl',
+          'auctionRules', 'images', 'isDemo', 'demoBiddingActive',
+          'createdBy', 'createdAt', 'updatedAt'
+        ])
+        && (!('isDemo' in data) || data.isDemo is bool)
+        && (!('demoBiddingActive' in data) || data.demoBiddingActive is bool)
+        && data.lotCode is string && data.lotCode.size() >= 2 && data.lotCode.size() <= 40
+        && data.title is string && data.title.size() >= 3 && data.title.size() <= 160
+        && data.gemstoneType is string && data.gemstoneType.size() >= 2 && data.gemstoneType.size() <= 80
+        && data.origin is string && data.origin.size() >= 2 && data.origin.size() <= 80
+        && data.caratWeight is number && data.caratWeight > 0 && data.caratWeight <= 10000
+        && data.cutShape is string && data.cutShape.size() >= 2 && data.cutShape.size() <= 80
+        && data.colorGrade is string && data.colorGrade.size() >= 2 && data.colorGrade.size() <= 80
+        && data.clarity is string && data.clarity.size() >= 2 && data.clarity.size() <= 80
+        && data.treatment is string && data.treatment.size() >= 2 && data.treatment.size() <= 120
+        && data.certification is string && data.certification.size() >= 2 && data.certification.size() <= 120
+        && data.certificateNumber is string && data.certificateNumber.size() <= 80
+        && data.dimensions is string && data.dimensions.size() <= 80
+        && data.description is string && data.description.size() >= 10 && data.description.size() <= 4000
+        && isValidCurrency(data.currency)
+        && data.startingBidMinor is int && data.startingBidMinor >= 0
+        && data.minimumIncrementMinor is int && data.minimumIncrementMinor > 0
+        && data.reservePriceMinor is int && data.reservePriceMinor >= 0
+        && data.showReservePrice is bool
+        && data.reserveMet is bool
+        && data.currentHighestBidMinor is int && data.currentHighestBidMinor >= 0
+        && data.highestBidderId is string && data.highestBidderId.size() <= 128
+        && data.highestBidderAlias is string && data.highestBidderAlias.size() <= 64
+        && data.bidCount is int && data.bidCount >= 0
+        && data.uniqueBiddersCount is int && data.uniqueBiddersCount >= 0
+        && data.status in ['draft', 'upcoming', 'live', 'paused', 'ended', 'completed', 'cancelled']
+        && data.resultStatus in ['pending', 'sold', 'unsold', 'reserve_not_met', 'cancelled']
+        && data.startTime is timestamp
+        && data.endTime is timestamp
+        && data.endTime > data.startTime
+        && data.featured is bool
+        && data.liveStreamUrl is string && data.liveStreamUrl.size() <= 400
+        && data.auctionRules is string && data.auctionRules.size() <= 2000
+        && data.images is list && data.images.size() >= 1 && data.images.size() <= 12
+        && data.images[0] is string && data.images[0].size() >= 4 && data.images[0].size() <= 2048
+        && data.createdBy is string && data.createdBy.size() >= 1 && data.createdBy.size() <= 128
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidBid(data, bidId) {
+      return data.keys().hasAll([
+          'auctionId', 'bidSequence', 'bidderId', 'bidderAlias',
+          'amountMinor', 'currency', 'status', 'flaggedReason', 'createdAt'
+        ])
+        && data.keys().hasOnly([
+          'auctionId', 'bidSequence', 'bidderId', 'bidderAlias',
+          'amountMinor', 'currency', 'status', 'flaggedReason', 'isDemo', 'createdAt'
+        ])
+        && isValidId(data.auctionId)
+        && data.bidSequence is int && data.bidSequence >= 1
+        && bidId == (data.auctionId + '_bid_' + string(data.bidSequence))
+        && isValidId(data.bidderId)
+        && data.bidderAlias is string && data.bidderAlias.size() >= 2 && data.bidderAlias.size() <= 64
+        && data.amountMinor is int && data.amountMinor > 0
+        && isValidCurrency(data.currency)
+        && data.status in ['valid', 'outbid', 'winning', 'flagged', 'invalidated']
+        && data.flaggedReason is string && data.flaggedReason.size() <= 300
+        && (!('isDemo' in data) || data.isDemo is bool)
+        && data.createdAt is timestamp;
+    }
+
+    function isValidReminder(data, reminderId) {
+      return data.keys().hasAll([
+          'userId', 'auctionId', 'auctionTitle', 'auctionStartTime',
+          'offsets', 'active', 'createdAt', 'updatedAt'
+        ])
+        && data.keys().hasOnly([
+          'userId', 'auctionId', 'auctionTitle', 'auctionStartTime',
+          'offsets', 'active', 'createdAt', 'updatedAt'
+        ])
+        && isValidId(data.userId)
+        && isValidId(data.auctionId)
+        && reminderId == (data.userId + '_' + data.auctionId)
+        && data.auctionTitle is string && data.auctionTitle.size() >= 1 && data.auctionTitle.size() <= 160
+        && data.auctionStartTime is timestamp
+        && data.offsets is list && data.offsets.size() >= 1 && data.offsets.size() <= 3
+        && data.offsets[0] is string && data.offsets[0] in ['24h', '1h', 'live']
+        && data.active is bool
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidSubscription(data) {
+      return data.keys().hasAll(['email', 'consentAccepted', 'status', 'source', 'createdAt', 'updatedAt'])
+        && data.keys().hasOnly(['email', 'consentAccepted', 'status', 'source', 'createdAt', 'updatedAt'])
+        && isValidEmail(data.email)
+        && data.consentAccepted is bool && data.consentAccepted == true
+        && data.status in ['active', 'unsubscribed']
+        && data.source is string && data.source.size() >= 1 && data.source.size() <= 60
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidNotification(data) {
+      return data.keys().hasAll(['userId', 'auctionId', 'type', 'title', 'message', 'read', 'createdAt'])
+        && data.keys().hasOnly(['userId', 'auctionId', 'type', 'title', 'message', 'read', 'createdAt'])
+        && isValidId(data.userId)
+        && data.auctionId is string && data.auctionId.size() <= 128
+        && data.type in ['outbid', 'auction_starting', 'auction_live', 'auction_won', 'auction_ended', 'new_auction', 'system']
+        && data.title is string && data.title.size() >= 2 && data.title.size() <= 160
+        && data.message is string && data.message.size() >= 2 && data.message.size() <= 600
+        && data.read is bool
+        && data.createdAt is timestamp;
+    }
+
+    function isValidAuditLog(data) {
+      return data.keys().hasAll(['actorId', 'actorEmail', 'action', 'targetType', 'targetId', 'details', 'createdAt'])
+        && data.keys().hasOnly(['actorId', 'actorEmail', 'action', 'targetType', 'targetId', 'details', 'createdAt'])
+        && isValidId(data.actorId)
+        && data.actorEmail is string && data.actorEmail.size() <= 160
+        && data.action is string && data.action.size() >= 2 && data.action.size() <= 80
+        && data.targetType in ['auction', 'bid', 'user', 'subscription', 'settings']
+        && data.targetId is string && data.targetId.size() >= 1 && data.targetId.size() <= 128
+        && data.details is string && data.details.size() <= 1000
+        && data.createdAt == request.time;
+    }
+
+    function isValidSettings(data) {
+      return data.keys().hasAll(['defaultCurrency', 'houseRules', 'antiSnipingNote', 'updatedBy', 'updatedAt'])
+        && data.keys().hasOnly(['defaultCurrency', 'houseRules', 'antiSnipingNote', 'demoModeEnabled', 'updatedBy', 'updatedAt'])
+        && isValidCurrency(data.defaultCurrency)
+        && data.houseRules is string && data.houseRules.size() <= 4000
+        && data.antiSnipingNote is string && data.antiSnipingNote.size() <= 500
+        && (!('demoModeEnabled' in data) || data.demoModeEnabled is bool)
+        && isValidId(data.updatedBy)
+        && data.updatedAt == request.time;
+    }
+
+    function isEligibleBidder(uid) {
+      return isEmailVerified()
+        && exists(/databases/$(database)/documents/users/$(uid))
+        && get(/databases/$(database)/documents/users/$(uid)).data.accountStatus == 'active'
+        && get(/databases/$(database)/documents/users/$(uid)).data.profileCompleted == true;
+    }
+
+    // ------------------------------------------------------------------
+    // Connection Health Probe
+    // ------------------------------------------------------------------
+    match /test/{docId} {
+      allow get: if docId == 'connection';
+    }
+
+    // ------------------------------------------------------------------
+    // Users (PII-Isolated: Owner or Admin Only)
+    // ------------------------------------------------------------------
+    match /users/{userId} {
+      allow get: if isValidId(userId) && (isOwner(userId) || isAdmin());
+      allow list: if isBootstrapAdmin();
+
+      allow create: if isValidId(userId)
+        && isOwner(userId)
+        && isValidUserProfile(incoming(), userId)
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time
+        && (
+          (isBootstrapAdmin() && incoming().role in ['user', 'admin'] && incoming().emailVerified == true && incoming().accountStatus == 'active')
+          || (
+            incoming().role == 'user'
+            && (
+              (isEmailVerified() && incoming().emailVerified == true && incoming().accountStatus == 'active')
+              || (!isEmailVerified() && incoming().emailVerified == false && incoming().accountStatus == 'pending_verification')
+            )
+          )
+        );
+
+      allow update: if isValidId(userId)
+        && isSignedIn()
+        && isValidUserProfile(incoming(), userId)
+        && incoming().uid == existing().uid
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time
+        && (
+          isAdmin()
+          || (
+            isOwner(userId)
+            && isEmailVerified()
+            && existing().accountStatus != 'suspended'
+            && incoming().role == existing().role
+            && incoming().authProvider == existing().authProvider
+            && incoming().email == existing().email
+            && incoming().emailVerified == true
+            && incoming().accountStatus == 'active'
+            && incoming().diff(existing()).affectedKeys().hasOnly([
+              'fullName', 'contactNumber', 'nationality', 'companyName', 'photoURL',
+              'profileCompleted', 'emailVerified', 'accountStatus',
+              'watchlistAuctionIds', 'notificationPreferences', 'updatedAt'
+            ])
+          )
+        );
+
+      allow delete: if isValidId(userId) && isAdmin();
+    }
+
+    // ------------------------------------------------------------------
+    // Admins Registry
+    // ------------------------------------------------------------------
+    match /admins/{userId} {
+      allow get: if isValidId(userId) && isEmailVerified() && (isOwner(userId) || isAdmin());
+      allow list: if isBootstrapAdmin();
+      allow create: if isValidId(userId)
+        && isValidAdminMarker(incoming(), userId)
+        && (isBootstrapAdmin() && userId == request.auth.uid || isAdmin());
+      allow update, delete: if isValidId(userId) && isAdmin() && userId != request.auth.uid;
+    }
+
+    // ------------------------------------------------------------------
+    // Auctions (Public Catalog excluding Drafts + Atomic Bidding)
+    // ------------------------------------------------------------------
+    match /auctions/{auctionId} {
+      allow get: if isValidId(auctionId) && (
+        existing().status in ['upcoming', 'live', 'paused', 'ended', 'completed', 'cancelled']
+        || isAdmin()
+      );
+      allow list: if resource.data.status in ['upcoming', 'live', 'paused', 'ended', 'completed', 'cancelled']
+        || isBootstrapAdmin();
+
+      allow create: if isValidId(auctionId)
+        && isAdmin()
+        && isValidAuction(incoming())
+        && incoming().createdBy == request.auth.uid
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time
+        && 'isDemo' in incoming()
+        && 'demoBiddingActive' in incoming()
+        && (
+          (
+            incoming().isDemo == false
+            && incoming().demoBiddingActive == false
+            && incoming().bidCount == 0
+            && incoming().uniqueBiddersCount == 0
+            && incoming().currentHighestBidMinor == 0
+            && incoming().highestBidderId == ''
+          )
+          || (
+            incoming().isDemo == true
+            && incoming().demoBiddingActive == false
+            && (
+              (
+                incoming().bidCount == 0
+                && incoming().uniqueBiddersCount == 0
+                && incoming().currentHighestBidMinor == 0
+                && incoming().highestBidderId == ''
+              )
+              || (
+                incoming().bidCount > 0
+                && incoming().currentHighestBidMinor >= incoming().startingBidMinor
+                && incoming().highestBidderId == 'demo_system_simulator'
+                && incoming().highestBidderAlias.matches('^DEMO / .*')
+              )
+            )
+          )
+        );
+
+      allow update: if isValidId(auctionId)
+        && isSignedIn()
+        && isValidAuction(incoming())
+        && incoming().createdBy == existing().createdBy
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time
+        && (
+          isAdmin()
+          || (
+            isEligibleBidder(request.auth.uid)
+            && existing().status == 'live'
+            && (!('isDemo' in existing()) || existing().isDemo == false || existing().demoBiddingActive == true)
+            && request.time >= existing().startTime
+            && request.time < existing().endTime
+            && incoming().highestBidderId == request.auth.uid
+            && incoming().bidCount == existing().bidCount + 1
+            && (
+              (existing().bidCount == 0 && incoming().currentHighestBidMinor >= existing().startingBidMinor)
+              || (existing().bidCount > 0 && incoming().currentHighestBidMinor >= existing().currentHighestBidMinor + existing().minimumIncrementMinor)
+            )
+            && incoming().reserveMet == (existing().reservePriceMinor == 0 || incoming().currentHighestBidMinor >= existing().reservePriceMinor)
+            && incoming().uniqueBiddersCount >= existing().uniqueBiddersCount
+            && incoming().uniqueBiddersCount <= existing().uniqueBiddersCount + 1
+            && incoming().diff(existing()).affectedKeys().hasOnly([
+              'currentHighestBidMinor', 'highestBidderId', 'highestBidderAlias',
+              'bidCount', 'uniqueBiddersCount', 'reserveMet', 'updatedAt'
+            ])
+            && existsAfter(/databases/$(database)/documents/bids/$(auctionId + '_bid_' + string(incoming().bidCount)))
+          )
+        );
+
+      allow delete: if isValidId(auctionId) && isAdmin() && existing().bidCount == 0;
+    }
+
+    // ------------------------------------------------------------------
+    // Bids (Immutable Ledger Linked Atomically to Auction)
+    // ------------------------------------------------------------------
+    match /bids/{bidId} {
+      allow get: if isValidId(bidId) && (
+        existing().status in ['valid', 'outbid', 'winning', 'flagged']
+        || (isSignedIn() && existing().bidderId == request.auth.uid)
+        || isAdmin()
+      );
+      allow list: if resource.data.status in ['valid', 'outbid', 'winning', 'flagged']
+        || (isSignedIn() && resource.data.bidderId == request.auth.uid)
+        || isBootstrapAdmin();
+
+      allow create: if isValidId(bidId)
+        && isValidBid(incoming(), bidId)
+        && exists(/databases/$(database)/documents/auctions/$(incoming().auctionId))
+        && get(/databases/$(database)/documents/auctions/$(incoming().auctionId)).data.currency == incoming().currency
+        && (
+          (
+            isEligibleBidder(request.auth.uid)
+            && (!('isDemo' in incoming()) || incoming().isDemo == false)
+            && incoming().bidderId == request.auth.uid
+            && incoming().createdAt == request.time
+            && incoming().status == 'winning'
+            && incoming().flaggedReason == ''
+            && (
+              !('isDemo' in get(/databases/$(database)/documents/auctions/$(incoming().auctionId)).data)
+              || get(/databases/$(database)/documents/auctions/$(incoming().auctionId)).data.isDemo == false
+              || get(/databases/$(database)/documents/auctions/$(incoming().auctionId)).data.demoBiddingActive == true
+            )
+            && getAfter(/databases/$(database)/documents/auctions/$(incoming().auctionId)).data.currentHighestBidMinor == incoming().amountMinor
+            && getAfter(/databases/$(database)/documents/auctions/$(incoming().auctionId)).data.highestBidderId == request.auth.uid
+            && getAfter(/databases/$(database)/documents/auctions/$(incoming().auctionId)).data.bidCount == incoming().bidSequence
+          )
+          || (
+            isAdmin()
+            && 'isDemo' in incoming()
+            && incoming().isDemo == true
+            && incoming().bidderId == 'demo_system_simulator'
+            && incoming().bidderAlias.matches('^DEMO / .*')
+            && incoming().flaggedReason == ''
+            && incoming().createdAt <= request.time
+            && get(/databases/$(database)/documents/auctions/$(incoming().auctionId)).data.isDemo == true
+          )
+        );
+
+      allow update: if isValidId(bidId)
+        && isAdmin()
+        && isValidBid(incoming(), bidId)
+        && incoming().auctionId == existing().auctionId
+        && incoming().bidSequence == existing().bidSequence
+        && incoming().bidderId == existing().bidderId
+        && incoming().amountMinor == existing().amountMinor
+        && incoming().currency == existing().currency
+        && incoming().createdAt == existing().createdAt
+        && incoming().diff(existing()).affectedKeys().hasOnly(['status', 'flaggedReason']);
+
+      allow delete: if false;
+    }
+
+    // ------------------------------------------------------------------
+    // Auction Reminders (Owner or Admin)
+    // ------------------------------------------------------------------
+    match /auctionReminders/{reminderId} {
+      allow get: if isValidId(reminderId) && isSignedIn() && (existing().userId == request.auth.uid || isAdmin());
+      allow list: if isSignedIn() && (resource.data.userId == request.auth.uid || isBootstrapAdmin());
+
+      allow create: if isValidId(reminderId)
+        && isEmailVerified()
+        && isValidReminder(incoming(), reminderId)
+        && incoming().userId == request.auth.uid
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time
+        && exists(/databases/$(database)/documents/auctions/$(incoming().auctionId));
+
+      allow update: if isValidId(reminderId)
+        && isEmailVerified()
+        && isValidReminder(incoming(), reminderId)
+        && incoming().userId == existing().userId
+        && incoming().auctionId == existing().auctionId
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time
+        && (isOwner(existing().userId) || isAdmin());
+
+      allow delete: if isValidId(reminderId) && isSignedIn() && (existing().userId == request.auth.uid || isAdmin());
+    }
+
+    // ------------------------------------------------------------------
+    // Newsletter & Auction Alert Subscriptions
+    // ------------------------------------------------------------------
+    match /subscriptions/{subscriptionId} {
+      allow get: if isValidId(subscriptionId) && (
+        isAdmin()
+        || (isEmailVerified() && existing().email == request.auth.token.email)
+      );
+      allow list: if isBootstrapAdmin()
+        || (isEmailVerified() && resource.data.email == request.auth.token.email);
+
+      allow create: if isValidId(subscriptionId)
+        && isValidSubscription(incoming())
+        && incoming().status == 'active'
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time;
+
+      allow update: if isValidId(subscriptionId)
+        && isValidSubscription(incoming())
+        && incoming().email == existing().email
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time
+        && (
+          isAdmin()
+          || (isEmailVerified() && existing().email == request.auth.token.email && incoming().diff(existing()).affectedKeys().hasOnly(['status', 'updatedAt']))
+          || (incoming().status == 'active' && incoming().consentAccepted == true && incoming().diff(existing()).affectedKeys().hasOnly(['status', 'consentAccepted', 'source', 'updatedAt']))
+        );
+
+      allow delete: if isValidId(subscriptionId) && isAdmin();
+    }
+
+    // ------------------------------------------------------------------
+    // Notifications
+    // ------------------------------------------------------------------
+    match /notifications/{notificationId} {
+      allow get: if isValidId(notificationId) && isSignedIn() && (existing().userId == request.auth.uid || isAdmin());
+      allow list: if isSignedIn() && (resource.data.userId == request.auth.uid || isBootstrapAdmin());
+
+      allow create: if isValidId(notificationId)
+        && isValidNotification(incoming())
+        && incoming().createdAt == request.time
+        && (
+          isAdmin()
+          || (
+            isEligibleBidder(request.auth.uid)
+            && incoming().type == 'outbid'
+            && incoming().userId != request.auth.uid
+            && isValidId(incoming().auctionId)
+            && exists(/databases/$(database)/documents/auctions/$(incoming().auctionId))
+            && get(/databases/$(database)/documents/auctions/$(incoming().auctionId)).data.highestBidderId == incoming().userId
+            && getAfter(/databases/$(database)/documents/auctions/$(incoming().auctionId)).data.highestBidderId == request.auth.uid
+          )
+        );
+
+      allow update: if isValidId(notificationId)
+        && isSignedIn()
+        && isValidNotification(incoming())
+        && incoming().userId == existing().userId
+        && incoming().auctionId == existing().auctionId
+        && incoming().type == existing().type
+        && incoming().title == existing().title
+        && incoming().message == existing().message
+        && incoming().createdAt == existing().createdAt
+        && (
+          isAdmin()
+          || (isOwner(existing().userId) && incoming().diff(existing()).affectedKeys().hasOnly(['read']))
+        );
+
+      allow delete: if isValidId(notificationId) && isSignedIn() && (existing().userId == request.auth.uid || isAdmin());
+    }
+
+    // ------------------------------------------------------------------
+    // Audit Logs (Admin Read, Verified Actor Write, Immutable)
+    // ------------------------------------------------------------------
+    match /auditLogs/{logId} {
+      allow get: if isValidId(logId) && isAdmin();
+      allow list: if isBootstrapAdmin();
+      allow create: if isValidId(logId)
+        && isEmailVerified()
+        && isValidAuditLog(incoming())
+        && incoming().actorId == request.auth.uid
+        && (isAdmin() || incoming().targetType == 'bid');
+      allow update, delete: if false;
+    }
+
+    // ------------------------------------------------------------------
+    // Platform Settings
+    // ------------------------------------------------------------------
+    match /settings/{settingId} {
+      allow get: if settingId == 'platform';
+      allow create, update: if settingId == 'platform' && isAdmin() && isValidSettings(incoming());
+    }
+  }
+}

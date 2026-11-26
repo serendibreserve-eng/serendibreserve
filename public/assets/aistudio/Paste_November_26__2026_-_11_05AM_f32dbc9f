@@ -1,0 +1,937 @@
+# SERENDIB RESERVE – COMPLETE GEMSTONE AUCTION PLATFORM DEVELOPMENT
+
+## PROJECT OBJECTIVE
+
+Upgrade the existing **Serendib Reserve (https://serendibreserve.com/)** website into a premium, fully functional international gemstone auction platform.
+
+I have provided a UI reference image showing the desired design direction. Use this image as the main visual reference for the new auction experience.
+
+**IMPORTANT:**
+- This is an improvement to an EXISTING developed website, not a completely new project.
+- First inspect the existing codebase, framework, components, routing, database, authentication and backend architecture.
+- Preserve the existing website's identity, branding, functionality, pages and established design wherever possible.
+- Do not delete or unnecessarily rewrite existing working features.
+- Integrate the new auction functionality into the existing architecture.
+- All frontend and backend features must work together. Do not create a static UI demonstration.
+- Implement real database operations, authentication, real-time updates and secure server-side validation.
+
+The final result should feel like a premium international gemstone auction marketplace originating from Sri Lanka.
+
+---
+
+# 1. DESIGN DIRECTION – PREMIUM AUCTION EXPERIENCE
+
+Follow the uploaded reference image closely for the auction interface.
+
+### Visual identity
+
+Create an elegant, premium and technologically advanced interface.
+
+Suggested colour palette:
+- Deep Navy: #07152F
+- Royal Blue: #102D69
+- Sapphire Blue: #244DCE
+- Royal Purple: #7047B8
+- Champagne Gold: #D9AE61
+- White: #F5F3EF
+
+### Design characteristics
+
+- Premium luxury typography.
+- Large gemstone photography.
+- Dark navy backgrounds with sapphire-blue gradients.
+- Champagne-gold buttons and accents.
+- Glassmorphism auction cards.
+- Subtle background lighting and gemstone-inspired visual effects.
+- Smooth transitions and micro-interactions.
+- Professional dashboard cards.
+- Responsive desktop, tablet and mobile layouts.
+- Consistent spacing, typography and reusable components.
+
+Avoid excessive animations that affect usability or performance.
+
+---
+
+# 2. MAIN WEBSITE NAVIGATION
+
+Integrate a dedicated auction navigation section into the existing website.
+
+Create or update the navigation menu with:
+
+1. Home
+2. Gemstones / Collection
+3. Live Auctions
+4. Upcoming Auctions
+5. Completed Auctions / Auction Results
+6. How It Works
+7. About Serendib Reserve
+8. Contact
+9. My Account
+10. Login / Sign Up
+
+The auction section must be accessible from the main navigation.
+
+Also add a prominent **LIVE AUCTION** indicator when at least one auction is currently active.
+
+---
+
+# 3. HOMEPAGE – AUCTION SECTION UNDER THE HERO
+
+Keep the existing homepage and its branding.
+
+Immediately BELOW the existing hero section, introduce a dedicated auction section inspired by the uploaded reference.
+
+### Section A – Featured Live Auction
+
+Create an attractive live auction showcase.
+
+Display:
+- Gemstone image.
+- Auction title.
+- Gemstone type.
+- Gemstone origin.
+- Carat weight.
+- Certification information.
+- Current highest bid.
+- Starting bid.
+- Reserve price, where configured.
+- Currency.
+- Auction start and end times.
+- Remaining countdown.
+- Total bids.
+- Number of active bidders.
+- LIVE status.
+
+Include two prominent actions:
+
+- View Auction
+- Place Bid
+
+The countdown must use the authoritative server time, not an independently calculated client-side timer.
+
+When no live auction exists, show a beautiful alternative state highlighting upcoming auctions.
+
+### Section B – Upcoming Auctions
+
+Create an attractive horizontal card layout or responsive grid.
+
+Each auction card should contain:
+- Gemstone thumbnail.
+- Auction title.
+- Gemstone type.
+- Starting bid and currency.
+- Auction starting date and time.
+- Countdown to auction start.
+- Certification status.
+- View Details button.
+- Set Reminder button.
+
+Display the next upcoming auctions automatically based on their scheduled starting times.
+
+Sort auctions by starting date, with the nearest upcoming auction displayed first.
+
+### Section C – Auction Trust Features
+
+Show four premium information cards:
+
+- 100% Authenticity – Certified Gemstones.
+- Global Participation – International Bidders.
+- Transparent Auctions – Fair Bidding Process.
+- Dedicated Support – Professional Assistance.
+
+### Section D – Completed Auction Results
+
+Display completed auction cards containing:
+- Gemstone image.
+- Auction title.
+- Final winning bid.
+- Currency.
+- Auction completion date.
+- Sold / Unsold status, as applicable.
+
+Only publish actual completed auction results from the database. Never display fabricated results.
+
+---
+
+# 4. USER AUTHENTICATION – LOGIN AND REGISTRATION
+
+Implement a complete authentication system.
+
+Users must be able to register and log in through:
+
+### Option 1 – Continue with Google
+
+Implement Google OAuth authentication.
+
+- Allow users to sign in using their Google account.
+- Retrieve their verified email address and available profile name.
+- Do not ask for a separate email verification when the identity provider has already verified the email.
+- Redirect first-time users to complete their profile information.
+- Create or update their user profile in the database.
+
+### Option 2 – Register with Email
+
+Registration fields:
+
+Required:
+- Full Name
+- Email Address
+- Password
+- Confirm Password
+- Contact Number
+- Nationality
+
+Optional:
+- Company Name
+
+Registration process:
+
+1. User enters their registration information.
+2. Validate all fields.
+3. Create the authentication account.
+4. Send a verification email.
+5. User clicks the email verification link.
+6. Verify the account.
+7. Activate the user account after required profile completion.
+8. Redirect to the user dashboard.
+
+Users with unverified email addresses must not be able to place bids.
+
+### Login page
+
+Provide:
+- Email and Password login.
+- Continue with Google.
+- Remember Me.
+- Forgot Password.
+- Sign Up link.
+- Clear error and success messages.
+
+### Password reset
+
+Implement a complete forgot-password workflow:
+
+1. User enters registered email.
+2. Send a secure password reset link.
+3. Verify the reset token.
+4. Allow password creation.
+5. Show password reset confirmation.
+
+Do not implement a fake password reset screen. Connect it to the actual authentication provider.
+
+---
+
+# 5. USER PROFILE AND VERIFICATION
+
+After registration, users must have a dedicated profile dashboard.
+
+Profile information:
+
+- Full Name.
+- Verified Email.
+- Contact Number.
+- Nationality.
+- Company Name (Optional).
+- Registration Date.
+- Account Verification Status.
+- Profile Completion Status.
+
+Create a verification status system:
+
+- Email Verified.
+- Profile Completed.
+- Account Active.
+- Account Suspended.
+
+Allow users to update permitted profile fields.
+
+Do not allow users to modify their account role or verification status.
+
+Administrators should be able to review and manage user accounts.
+
+Only eligible, verified and active registered users can place bids.
+
+---
+
+# 6. DEDICATED LIVE AUCTION PAGE
+
+Create a dedicated auction listing page.
+
+Display all relevant auctions in filterable cards.
+
+Filtering options:
+- Live Auctions.
+- Upcoming Auctions.
+- Completed Auctions.
+- Gemstone Type.
+- Currency.
+- Price Range.
+- Auction Date.
+
+### Individual Auction Details Page
+
+When a user clicks an auction, open a dedicated details page.
+
+Use a premium two-column layout.
+
+LEFT SIDE:
+- Large gemstone image gallery.
+- Multiple images.
+- Image zoom functionality.
+- Gemstone description.
+- Gemstone specifications.
+- Certification details.
+- Gemstone origin.
+
+RIGHT SIDE:
+- LIVE / UPCOMING / ENDED status.
+- Auction title.
+- Auction countdown.
+- Starting bid.
+- Current highest bid.
+- Reserve price, if available.
+- Minimum bid increment.
+- Currency.
+- Total bids.
+- Active bidder count, where available.
+- Place Bid form.
+- Live streaming link or embedded video player, if configured.
+- Auction information and conditions.
+
+### Live bidding functionality
+
+Registered, verified and active users can submit bids.
+
+Bid form:
+- Enter Bid Amount.
+- Display auction currency.
+- Display minimum acceptable next bid.
+- Place Bid button.
+
+When the user submits a bid:
+
+1. Check the authentication status.
+2. Verify the user's account eligibility.
+3. Check that the auction is currently open.
+4. Validate the bid amount against the current highest bid and minimum increment.
+5. Process the bid on the server using an atomic transaction.
+6. Update the highest bid.
+7. Record the bidder and timestamp.
+8. Broadcast the update to other connected users.
+9. Display a successful bid confirmation.
+
+Display useful error messages for:
+- Auction not started.
+- Auction already ended.
+- Invalid bid.
+- Bid below minimum amount.
+- User not verified.
+- Account suspended.
+- Concurrent bid conflict.
+
+### Real-time synchronization
+
+When one user successfully places a bid, all connected users viewing that auction should immediately see:
+
+- Updated current highest bid.
+- Updated bid history.
+- Updated total bid count.
+- Updated leading bidder status.
+
+Use a real-time database subscription or WebSocket implementation.
+
+Do not rely on manually refreshing the webpage.
+
+The server must remain authoritative for all bid operations.
+
+---
+
+# 7. ADMIN DASHBOARD – COMPLETE BACKEND MANAGEMENT
+
+Create a dedicated and secure administrative dashboard.
+
+Suggested route:
+
+/admin
+
+This dashboard must be separate from the normal user dashboard.
+
+Only authorized administrators can access it.
+
+Implement role-based access control on the server. Never rely only on hiding admin links in the frontend.
+
+### Admin Dashboard Overview
+
+Show statistics:
+
+- Total Registered Users.
+- Verified Users.
+- Total Auctions.
+- Live Auctions.
+- Upcoming Auctions.
+- Completed Auctions.
+- Total Bids.
+- Total Winning Bids.
+
+Use attractive dashboard cards and charts where appropriate.
+
+### Auction Management
+
+Create a complete CRUD system.
+
+Administrator must be able to:
+
+- Create an auction.
+- Edit an auction.
+- Preview an auction.
+- Publish an auction.
+- Schedule an auction.
+- Start an auction.
+- Pause or cancel an auction, subject to auction rules.
+- Close an auction.
+- View auction results.
+- Delete or archive eligible auctions.
+
+### Create Auction Form
+
+Build a professional auction creation form with the following fields.
+
+**Basic Information**
+
+1. Auction Title – Required.
+2. Auction Description.
+3. Gemstone Type – Sapphire, Ruby, Emerald, Amethyst, Spinel, etc.
+4. Gemstone Origin / Country.
+5. Carat Weight.
+6. Gemstone Colour.
+7. Gemstone Shape / Cut.
+8. Certification Information.
+9. Certificate Number, if available.
+
+**Gemstone Images**
+
+10. Upload Main Image.
+11. Upload Multiple Gallery Images.
+12. Image Preview.
+13. Set Featured Image.
+14. Remove / Replace Images.
+
+Support image uploads using the existing storage solution, or integrate secure cloud storage if one is not yet configured.
+
+**Auction Configuration**
+
+15. Auction Starting Date.
+16. Auction Starting Time.
+17. Auction Ending Date.
+18. Auction Ending Time.
+19. Starting Bid Amount.
+20. Currency Type.
+21. Minimum Bid Increment.
+22. Reserve Price (Optional).
+23. Live Auction Link (Optional).
+24. Auction Status.
+
+### Supported Currency Types
+
+Allow administrators to select the auction currency.
+
+Initially support:
+- USD – US Dollar.
+- LKR – Sri Lankan Rupee.
+- EUR – Euro.
+- GBP – British Pound.
+- AED – UAE Dirham.
+- SGD – Singapore Dollar.
+- CNY – Chinese Yuan.
+
+The currency must be displayed consistently throughout the auction.
+
+Do not automatically mix or convert currencies when comparing bids. Each auction must retain its configured currency. Store monetary values safely using integer minor units or an appropriate precise decimal representation.
+
+### Live Auction Link
+
+Allow administrators to add a video/live streaming URL.
+
+Support approved providers such as:
+- YouTube Live.
+- Vimeo.
+- Other approved streaming platforms.
+
+Show the live player or an accessible Watch Live link on the auction details page.
+
+Do not expose private administrative URLs or credentials.
+
+### Admin Bid Management
+
+Provide a dedicated bid management section.
+
+Administrators can:
+- View all bids.
+- Filter by auction.
+- Search by bidder.
+- View bid amount and currency.
+- View bid timestamps.
+- View bid history.
+- Review flagged activity.
+- Investigate suspicious bids.
+
+All bid records must be retained in an audit history.
+
+Administrators must not silently edit or fabricate historical bid records. Any exceptional correction should have a recorded reason and audit trail.
+
+### User Management
+
+Administrators can:
+- View registered users.
+- Search and filter users.
+- Review user profiles.
+- View email verification status.
+- Review company and nationality information.
+- Activate or suspend accounts.
+- Assign administrator permissions only through a protected authorization process.
+
+### Auction Results Management
+
+Provide a results dashboard showing:
+- Auction title.
+- Final highest bid.
+- Winning bidder.
+- Currency.
+- Auction closing date.
+- Sold / Unsold status.
+
+Publish completed results on the public website according to the auction configuration.
+
+---
+
+# 8. UPCOMING AUCTION REMINDERS
+
+Allow registered users to set reminders for upcoming auctions.
+
+Each upcoming auction card must include a **Set Reminder** button.
+
+When clicked:
+
+1. Check whether the user is signed in.
+2. Save the reminder against the user and auction.
+3. Confirm that the reminder has been set.
+4. Change the button to Reminder Set.
+5. Allow users to cancel the reminder.
+
+Users must be able to manage their reminders from My Account.
+
+Prevent duplicate reminders for the same user and auction.
+
+### Automatic reminder notifications
+
+When an administrator schedules a new auction, users who have subscribed to auction notifications should be eligible to receive notifications according to their preferences.
+
+Implement configurable reminders such as:
+
+- 24 hours before auction starts.
+- 1 hour before auction starts.
+- When the auction goes live.
+
+All reminder schedules must be processed by reliable backend scheduled jobs, not by an open browser tab.
+
+---
+
+# 9. SUBSCRIPTION AND NOTIFICATION SYSTEM
+
+Create an email subscription system for visitors and registered users.
+
+Add a subscription section on the homepage.
+
+Suggested heading:
+
+**Never Miss a Rare Gem Auction**
+
+Description:
+
+Subscribe to receive exclusive updates about upcoming gemstone auctions, live auction announcements and new additions to Serendib Reserve.
+
+Subscription form:
+- Email Address.
+- Subscribe button.
+- Consent checkbox for receiving auction-related emails.
+
+### Subscriber management
+
+Administrators should be able to:
+- View subscribers.
+- Search subscriber emails.
+- Export subscriber lists.
+- View subscription dates.
+- Manage subscription status.
+- View unsubscribe status.
+
+Implement secure email subscription confirmation where appropriate.
+
+### Notification events
+
+Create automated notifications for:
+
+1. New auction published.
+2. Auction starting in 24 hours.
+3. Auction starting in 1 hour.
+4. Auction has gone LIVE.
+5. Auction reminder.
+6. User successfully placed a bid.
+7. Another bidder has outbid the user.
+8. Auction completed.
+9. User has won an auction, if applicable under the auction rules.
+
+Provide email notifications and an in-app notification centre.
+
+Optional: support web push notifications for users who explicitly grant browser notification permission.
+
+### User notification preferences
+
+Allow registered users to choose:
+- Upcoming Auction Announcements.
+- Live Auction Announcements.
+- Auction Reminders.
+- Bid Activity Notifications.
+- Marketing and Promotional Emails.
+
+Respect user consent, unsubscribe requests and notification preferences.
+
+Use a configured transactional email provider. Keep all API keys and email credentials in secure server-side environment variables.
+
+---
+
+# 10. FRONTEND AND BACKEND DATABASE SYNCHRONIZATION
+
+This is one of the most important requirements.
+
+The entire platform must use a single authoritative backend and database.
+
+When an administrator creates or updates an auction:
+
+- Save the record in the database.
+- Display it automatically on the homepage.
+- Display it in the Upcoming Auctions section if scheduled.
+- Display it in Live Auctions when it becomes active.
+- Display the completed result after its status is finalized.
+
+When an administrator updates auction images, title, time, starting bid, currency or live link, the corresponding frontend must reflect the changes.
+
+When a user places a bid:
+
+- Save the bid on the backend.
+- Update the current highest bid.
+- Synchronize the auction details page.
+- Update bid history.
+- Update the relevant user dashboard.
+- Trigger appropriate notifications.
+
+Do not maintain separate hardcoded frontend auction data.
+
+All auction listings, details, bid records, user information, reminders and results must originate from the database.
+
+### Suggested database structure
+
+Use the existing database if one already exists. Otherwise, choose an appropriate backend.
+
+Core entities:
+
+**Users**
+- id
+- fullName
+- email
+- contactNumber
+- nationality
+- companyName
+- emailVerified
+- profileCompleted
+- accountStatus
+- role
+- createdAt
+
+**Auctions**
+- id
+- title
+- description
+- gemstoneType
+- gemstoneOrigin
+- caratWeight
+- gemstoneColour
+- gemstoneCut
+- certification
+- certificateNumber
+- mainImage
+- galleryImages
+- startTime
+- endTime
+- startingBid
+- currentHighestBid
+- reservePrice
+- minimumBidIncrement
+- currency
+- liveLink
+- status
+- createdBy
+- createdAt
+- updatedAt
+
+**Bids**
+- id
+- auctionId
+- userId
+- bidAmount
+- currency
+- createdAt
+- bidStatus
+
+**AuctionReminders**
+- id
+- auctionId
+- userId
+- reminderPreferences
+- createdAt
+
+**Subscriptions**
+- id
+- email
+- userId (optional)
+- consentStatus
+- subscriptionStatus
+- createdAt
+- unsubscribedAt
+
+**Notifications**
+- id
+- userId
+- title
+- message
+- notificationType
+- auctionId
+- isRead
+- createdAt
+
+**AuditLogs**
+- id
+- actorId
+- action
+- entityType
+- entityId
+- details
+- createdAt
+
+Adapt these entities to the existing database conventions rather than creating duplicate tables unnecessarily.
+
+---
+
+# 11. TECHNICAL ARCHITECTURE AND SECURITY
+
+First inspect and reuse the existing technology stack.
+
+If the application already has a working backend, database and authentication provider, integrate with them instead of replacing them.
+
+If the project has no backend infrastructure and is compatible with Google's ecosystem, use:
+
+- Firebase Authentication – Google and email/password authentication.
+- Cloud Firestore – Auction, user, bid and notification data.
+- Firebase Storage – Gemstone images.
+- Cloud Functions – Secure bid processing and server-side business logic.
+- Firebase Cloud Messaging – Optional web push notifications.
+- Scheduled Cloud Functions – Automatic auction state transitions and reminders.
+
+Use the appropriate real-time subscription mechanism for live synchronization.
+
+### Security requirements
+
+- Enforce authentication on protected routes.
+- Implement server-side role-based access control.
+- Protect administrator operations.
+- Validate every bid on the backend.
+- Prevent users from modifying the current highest bid directly.
+- Prevent unauthorized database writes.
+- Enforce auction start and end times server-side.
+- Handle simultaneous bids through atomic transactions or equivalent concurrency control.
+- Prevent duplicate or replayed bid submissions.
+- Sanitize and validate inputs.
+- Protect sensitive user data.
+- Keep secrets and API credentials off the frontend.
+- Apply rate limiting and abuse prevention.
+- Add appropriate database security rules.
+- Maintain audit logs for administrative and bidding actions.
+
+Never trust frontend-calculated prices, timestamps, permissions or auction statuses.
+
+Do not invent payment functionality. Keep the bidding platform ready for a future payment and settlement integration without presenting an unimplemented payment flow as operational.
+
+---
+
+# 12. RESPONSIVE UI AND USER EXPERIENCE
+
+The complete website must work properly on:
+
+- Desktop.
+- Laptop.
+- Tablet.
+- Mobile phones.
+
+For mobile:
+- Use a collapsible navigation menu.
+- Make auction cards responsive.
+- Keep the current bid and Place Bid action easily accessible.
+- Ensure forms are mobile-friendly.
+- Avoid horizontal overflow.
+- Make countdowns and status indicators readable.
+
+Use consistent loading indicators, error states, empty states, success feedback and confirmation dialogs throughout the application.
+
+---
+
+# 13. REQUIRED ROUTES / PAGES
+
+Integrate the following pages into the current routing structure.
+
+Public pages:
+- /
+- /auctions
+- /auctions/live
+- /auctions/upcoming
+- /auctions/completed
+- /auction/:auctionId
+- /login
+- /register
+- /forgot-password
+- /reset-password
+- /verify-email
+- /about
+- /contact
+
+Authenticated user pages:
+- /account
+- /account/profile
+- /account/my-bids
+- /account/watchlist
+- /account/reminders
+- /account/notifications
+
+Administrator pages:
+- /admin
+- /admin/auctions
+- /admin/auctions/create
+- /admin/auctions/edit/:auctionId
+- /admin/bids
+- /admin/users
+- /admin/subscribers
+- /admin/results
+- /admin/notifications
+- /admin/settings
+
+Adjust routes to fit the existing application conventions.
+
+---
+
+# 14. IMPLEMENTATION INSTRUCTIONS
+
+Do not attempt to create all these screens as disconnected static mockups.
+
+Work with the existing project and implement the actual functionality.
+
+### Phase 1 – Existing Project Inspection
+
+- Review all existing project files.
+- Identify the frontend framework and routing.
+- Identify existing authentication.
+- Identify backend and database infrastructure.
+- Identify current design components.
+- Identify any existing API integrations.
+- Prepare an implementation plan that preserves existing functionality.
+
+### Phase 2 – Core Infrastructure
+
+- Implement or reuse authentication.
+- Set up database entities.
+- Set up secure image storage.
+- Implement authorization and database security.
+- Create auction management APIs and services.
+
+### Phase 3 – Auction Frontend
+
+- Implement homepage auction sections.
+- Implement auction listings.
+- Implement individual auction details.
+- Implement live bidding interface.
+- Implement upcoming auction reminders.
+- Implement completed auction results.
+
+### Phase 4 – Admin Dashboard
+
+- Implement admin authentication and role protection.
+- Implement auction CRUD.
+- Implement image uploads.
+- Implement bid management.
+- Implement user management.
+- Implement subscriber management.
+- Implement result management.
+
+### Phase 5 – Notifications and Real-Time Features
+
+- Implement live bid updates.
+- Implement automated auction status changes.
+- Implement reminder scheduling.
+- Implement email notifications.
+- Implement in-app notifications.
+- Implement subscription management.
+
+### Phase 6 – Testing
+
+Test the complete workflow:
+
+1. Register a new user using email.
+2. Verify the user's email.
+3. Register another user using Google.
+4. Complete their profile.
+5. Log in and reset a password.
+6. Log in as an administrator.
+7. Create a gemstone auction.
+8. Upload multiple gemstone images.
+9. Configure the starting bid and currency.
+10. Set the auction start and end times.
+11. Add a live streaming link.
+12. Publish an upcoming auction.
+13. Confirm it appears on the public homepage.
+14. Subscribe to auction notifications.
+15. Set an upcoming auction reminder.
+16. Start the auction.
+17. Confirm the LIVE status appears automatically.
+18. Log in as two different users.
+19. Place bids from both users.
+20. Confirm live bid synchronization.
+21. Test invalid and simultaneous bids.
+22. Close the auction.
+23. Confirm the completed auction result.
+24. Confirm notification delivery and unsubscribe functionality.
+
+Do not mark a feature as completed just because its UI is visible. Verify the underlying functionality.
+
+---
+
+# FINAL DELIVERY REQUIREMENTS
+
+The final application must deliver:
+
+1. A premium Serendib Reserve website with the new auction experience.
+2. Fully functional Google and email registration/login.
+3. Email verification and password reset.
+4. Complete user profiles and verification status.
+5. Dedicated Live Auction and Upcoming Auction pages.
+6. Real-time bidding for registered and eligible users.
+7. A complete protected Admin Dashboard.
+8. Full auction creation and management.
+9. Gemstone image uploads and gallery management.
+10. Configurable auction times, live links and currencies.
+11. User reminders for upcoming auctions.
+12. Email subscriptions and automated notifications.
+13. Completed auction results.
+14. Real-time frontend/backend synchronization.
+15. Secure database rules and server-side business logic.
+
+**MOST IMPORTANT:** Maintain the current website and implement this as an integrated extension. Deliver a genuinely functional full-stack application, not merely a visually impressive frontend.
+
+The uploaded UI reference is the target visual direction for the homepage auction experience. Preserve its premium sapphire-blue and gold aesthetic while making all controls and workflows operational.

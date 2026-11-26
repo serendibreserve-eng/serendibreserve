@@ -50,7 +50,7 @@ export function latLonToVector3(lat: number, lon: number, radius: number, out = 
 export function afterDraw(renderer: THREE.WebGLRenderer, cb: () => void, setTimer: (id: number) => void) {
   const gl = renderer.getContext() as WebGL2RenderingContext;
   if (!gl || typeof gl.fenceSync !== 'function') {
-    setTimer(window.setTimeout(cb, 80));
+    setTimer(window.setTimeout(cb, 130));
     return;
   }
   const sync = gl.fenceSync(gl.SYNC_GPU_COMMANDS_COMPLETE, 0);
@@ -58,13 +58,13 @@ export function afterDraw(renderer: THREE.WebGLRenderer, cb: () => void, setTime
   let polls = 0;
   const poll = () => {
     const state = sync && gl.getSyncParameter(sync, gl.SYNC_STATUS);
-    if (state === gl.UNSIGNALED && polls < 15) {
+    if (state === gl.UNSIGNALED && polls < 12) {
       polls += 1;
-      setTimer(window.setTimeout(poll, 8));
+      setTimer(window.setTimeout(poll, 10));
     } else {
       if (sync) gl.deleteSync(sync);
-      setTimer(window.setTimeout(cb, 65));
+      setTimer(window.setTimeout(cb, 120));
     }
   };
-  setTimer(window.setTimeout(poll, 8));
+  setTimer(window.setTimeout(poll, 10));
 }

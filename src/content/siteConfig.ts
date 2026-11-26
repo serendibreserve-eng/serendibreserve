@@ -68,6 +68,16 @@ export const SITE_CONFIG = {
 
 export const MAIN_NAV_LINKS: NavItem[] = [
   { label: 'Home', path: '/' },
+  { label: 'Gemstones', path: '/gem-types' },
+  { label: 'Live Auctions', path: '/auctions/live' },
+  { label: 'Upcoming Auctions', path: '/auctions/upcoming' },
+  { label: 'Results', path: '/auctions/completed' },
+  { label: 'How It Works', path: '/how-it-works' },
+  { label: 'About', path: '/about' },
+  { label: 'Contact', path: '/contact' },
+];
+
+export const HOUSE_SUB_LINKS: NavItem[] = [
   { label: 'Gem Types', path: '/gem-types' },
   { label: 'Gems of Sri Lanka', path: '/gems-of-sri-lanka' },
   { label: 'Gem Industry', path: '/gem-industry' },
@@ -75,12 +85,23 @@ export const MAIN_NAV_LINKS: NavItem[] = [
   { label: 'Our Products', path: '/products' },
   { label: 'Join Our Team', path: '/careers' },
   { label: 'Inquiries', path: '/inquiries' },
-  { label: 'Contact', path: '/contact' },
 ];
 
 export const FOOTER_NAV_LINKS: NavItem[] = [
-  ...MAIN_NAV_LINKS,
-  { label: 'Our Story', path: '/about' },
+  { label: 'Home', path: '/' },
+  { label: 'Live Auctions', path: '/auctions/live' },
+  { label: 'Upcoming Auctions', path: '/auctions/upcoming' },
+  { label: 'Completed Results', path: '/auctions/completed' },
+  { label: 'How It Works', path: '/how-it-works' },
+  { label: 'Gem Types', path: '/gem-types' },
+  { label: 'Gems of Sri Lanka', path: '/gems-of-sri-lanka' },
+  { label: 'Gem Industry', path: '/gem-industry' },
+  { label: 'Global Market', path: '/global-market' },
+  { label: 'Our Products', path: '/products' },
+  { label: 'Inquiries', path: '/inquiries' },
+  { label: 'Join Our Team', path: '/careers' },
+  { label: 'About Serendib Reserve', path: '/about' },
+  { label: 'Contact', path: '/contact' },
 ];
 
 export const LIVE_STATS = [

@@ -1,0 +1,285 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "Private user account profile containing bidder eligibility and contact PII",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "fullName": { "type": "string", "minLength": 1, "maxLength": 120 },
+        "email": { "type": "string", "format": "email", "maxLength": 160 },
+        "contactNumber": { "type": "string", "maxLength": 40 },
+        "nationality": { "type": "string", "maxLength": 80 },
+        "companyName": { "type": "string", "maxLength": 120 },
+        "photoURL": { "type": "string", "maxLength": 500 },
+        "authProvider": { "type": "string", "enum": ["google", "password"] },
+        "role": { "type": "string", "enum": ["user", "admin"] },
+        "accountStatus": { "type": "string", "enum": ["active", "pending_verification", "suspended"] },
+        "emailVerified": { "type": "boolean" },
+        "profileCompleted": { "type": "boolean" },
+        "watchlistAuctionIds": { "type": "array" },
+        "notificationPreferences": { "type": "object" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": [
+        "uid",
+        "fullName",
+        "email",
+        "contactNumber",
+        "nationality",
+        "authProvider",
+        "role",
+        "accountStatus",
+        "emailVerified",
+        "profileCompleted",
+        "watchlistAuctionIds",
+        "notificationPreferences",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "AdminMarker": {
+      "title": "AdminMarker",
+      "description": "Role marker document granting admin capability to a specific user UID",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "email": { "type": "string", "format": "email", "maxLength": 160 },
+        "grantedBy": { "type": "string", "maxLength": 128 },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "email", "grantedBy", "createdAt"]
+    },
+    "Auction": {
+      "title": "Auction",
+      "description": "Fine Ceylon gemstone auction lot with single-currency integer minor-unit pricing and bidding state",
+      "type": "object",
+      "properties": {
+        "lotCode": { "type": "string", "minLength": 2, "maxLength": 40 },
+        "title": { "type": "string", "minLength": 3, "maxLength": 160 },
+        "gemstoneType": { "type": "string", "minLength": 2, "maxLength": 80 },
+        "origin": { "type": "string", "minLength": 2, "maxLength": 80 },
+        "caratWeight": { "type": "number" },
+        "cutShape": { "type": "string", "minLength": 2, "maxLength": 80 },
+        "colorGrade": { "type": "string", "minLength": 2, "maxLength": 80 },
+        "clarity": { "type": "string", "minLength": 2, "maxLength": 80 },
+        "treatment": { "type": "string", "minLength": 2, "maxLength": 120 },
+        "certification": { "type": "string", "minLength": 2, "maxLength": 120 },
+        "certificateNumber": { "type": "string", "maxLength": 80 },
+        "dimensions": { "type": "string", "maxLength": 80 },
+        "description": { "type": "string", "minLength": 10, "maxLength": 4000 },
+        "currency": { "type": "string", "enum": ["USD", "LKR", "EUR", "GBP", "AED", "SGD", "CNY"] },
+        "startingBidMinor": { "type": "integer" },
+        "minimumIncrementMinor": { "type": "integer" },
+        "reservePriceMinor": { "type": "integer" },
+        "showReservePrice": { "type": "boolean" },
+        "reserveMet": { "type": "boolean" },
+        "currentHighestBidMinor": { "type": "integer" },
+        "highestBidderId": { "type": "string", "maxLength": 128 },
+        "highestBidderAlias": { "type": "string", "maxLength": 64 },
+        "bidCount": { "type": "integer" },
+        "uniqueBiddersCount": { "type": "integer" },
+        "status": { "type": "string", "enum": ["draft", "upcoming", "live", "paused", "ended", "completed", "cancelled"] },
+        "resultStatus": { "type": "string", "enum": ["pending", "sold", "unsold", "reserve_not_met", "cancelled"] },
+        "startTime": { "type": "string", "format": "date-time" },
+        "endTime": { "type": "string", "format": "date-time" },
+        "featured": { "type": "boolean" },
+        "liveStreamUrl": { "type": "string", "maxLength": 400 },
+        "auctionRules": { "type": "string", "maxLength": 2000 },
+        "images": { "type": "array" },
+        "isDemo": { "type": "boolean" },
+        "demoBiddingActive": { "type": "boolean" },
+        "createdBy": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": [
+        "lotCode",
+        "title",
+        "gemstoneType",
+        "origin",
+        "caratWeight",
+        "cutShape",
+        "colorGrade",
+        "clarity",
+        "treatment",
+        "certification",
+        "certificateNumber",
+        "dimensions",
+        "description",
+        "currency",
+        "startingBidMinor",
+        "minimumIncrementMinor",
+        "reservePriceMinor",
+        "showReservePrice",
+        "reserveMet",
+        "currentHighestBidMinor",
+        "highestBidderId",
+        "highestBidderAlias",
+        "bidCount",
+        "uniqueBiddersCount",
+        "status",
+        "resultStatus",
+        "startTime",
+        "endTime",
+        "featured",
+        "liveStreamUrl",
+        "auctionRules",
+        "images",
+        "createdBy",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "Bid": {
+      "title": "Bid",
+      "description": "Immutable chronological bid event linked atomically to an auction lot",
+      "type": "object",
+      "properties": {
+        "auctionId": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "bidSequence": { "type": "integer" },
+        "bidderId": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "bidderAlias": { "type": "string", "minLength": 2, "maxLength": 64 },
+        "amountMinor": { "type": "integer" },
+        "currency": { "type": "string", "enum": ["USD", "LKR", "EUR", "GBP", "AED", "SGD", "CNY"] },
+        "status": { "type": "string", "enum": ["valid", "outbid", "winning", "flagged", "invalidated"] },
+        "flaggedReason": { "type": "string", "maxLength": 300 },
+        "isDemo": { "type": "boolean" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": [
+        "auctionId",
+        "bidSequence",
+        "bidderId",
+        "bidderAlias",
+        "amountMinor",
+        "currency",
+        "status",
+        "flaggedReason",
+        "createdAt"
+      ]
+    },
+    "AuctionReminder": {
+      "title": "AuctionReminder",
+      "description": "User-scheduled alert offsets for an upcoming auction lot",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "auctionId": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "auctionTitle": { "type": "string", "minLength": 1, "maxLength": 160 },
+        "auctionStartTime": { "type": "string", "format": "date-time" },
+        "offsets": { "type": "array" },
+        "active": { "type": "boolean" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": [
+        "userId",
+        "auctionId",
+        "auctionTitle",
+        "auctionStartTime",
+        "offsets",
+        "active",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "Subscription": {
+      "title": "Subscription",
+      "description": "Auction alert email subscription record with explicit consent",
+      "type": "object",
+      "properties": {
+        "email": { "type": "string", "format": "email", "maxLength": 160 },
+        "consentAccepted": { "type": "boolean" },
+        "status": { "type": "string", "enum": ["active", "unsubscribed"] },
+        "source": { "type": "string", "maxLength": 60 },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["email", "consentAccepted", "status", "source", "createdAt", "updatedAt"]
+    },
+    "Notification": {
+      "title": "Notification",
+      "description": "In-app notification entry for bidder events and auction status updates",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "auctionId": { "type": "string", "maxLength": 128 },
+        "type": { "type": "string", "enum": ["outbid", "auction_starting", "auction_live", "auction_won", "auction_ended", "new_auction", "system"] },
+        "title": { "type": "string", "minLength": 2, "maxLength": 160 },
+        "message": { "type": "string", "minLength": 2, "maxLength": 600 },
+        "read": { "type": "boolean" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "auctionId", "type", "title", "message", "read", "createdAt"]
+    },
+    "AuditLog": {
+      "title": "AuditLog",
+      "description": "Immutable administrative and bidding audit trail entry",
+      "type": "object",
+      "properties": {
+        "actorId": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "actorEmail": { "type": "string", "maxLength": 160 },
+        "action": { "type": "string", "minLength": 2, "maxLength": 80 },
+        "targetType": { "type": "string", "enum": ["auction", "bid", "user", "subscription", "settings"] },
+        "targetId": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "details": { "type": "string", "maxLength": 1000 },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["actorId", "actorEmail", "action", "targetType", "targetId", "details", "createdAt"]
+    },
+    "PlatformSettings": {
+      "title": "PlatformSettings",
+      "description": "Global platform configuration managed by administrators",
+      "type": "object",
+      "properties": {
+        "defaultCurrency": { "type": "string", "enum": ["USD", "LKR", "EUR", "GBP", "AED", "SGD", "CNY"] },
+        "houseRules": { "type": "string", "maxLength": 4000 },
+        "antiSnipingNote": { "type": "string", "maxLength": 500 },
+        "demoModeEnabled": { "type": "boolean" },
+        "updatedBy": { "type": "string", "maxLength": 128 },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["defaultCurrency", "houseRules", "antiSnipingNote", "updatedBy", "updatedAt"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": { "$ref": "#/entities/UserProfile" },
+      "description": "Private user accounts and bidder eligibility profiles"
+    },
+    "/admins/{userId}": {
+      "schema": { "$ref": "#/entities/AdminMarker" },
+      "description": "Admin authorization registry"
+    },
+    "/auctions/{auctionId}": {
+      "schema": { "$ref": "#/entities/Auction" },
+      "description": "Live, upcoming, completed, and draft gemstone auction lots"
+    },
+    "/bids/{bidId}": {
+      "schema": { "$ref": "#/entities/Bid" },
+      "description": "Chronological bids linked atomically to auctions"
+    },
+    "/auctionReminders/{reminderId}": {
+      "schema": { "$ref": "#/entities/AuctionReminder" },
+      "description": "User reminders for upcoming auction start alerts"
+    },
+    "/subscriptions/{subscriptionId}": {
+      "schema": { "$ref": "#/entities/Subscription" },
+      "description": "Email alert subscribers with consent verification"
+    },
+    "/notifications/{notificationId}": {
+      "schema": { "$ref": "#/entities/Notification" },
+      "description": "User notification center entries"
+    },
+    "/auditLogs/{logId}": {
+      "schema": { "$ref": "#/entities/AuditLog" },
+      "description": "Immutable administrative and bidding audit trail"
+    },
+    "/settings/{settingId}": {
+      "schema": { "$ref": "#/entities/PlatformSettings" },
+      "description": "Global auction house rules and platform settings"
+    }
+  }
+}

@@ -123,10 +123,13 @@ export const Gem3D: React.FC<Gem3DProps> = ({
     mount.appendChild(renderer.domElement);
 
     const scene = new THREE.Scene();
-    const pmrem = new THREE.PMREMGenerator(renderer);
-    const envTex = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
-    scene.environment = envTex;
-    pmrem.dispose();
+    let envTex: THREE.Texture | null = null;
+    if (!isSoftwareGl) {
+      const pmrem = new THREE.PMREMGenerator(renderer);
+      envTex = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
+      scene.environment = envTex;
+      pmrem.dispose();
+    }
 
     const camera = new THREE.PerspectiveCamera(
       34,
@@ -138,10 +141,10 @@ export const Gem3D: React.FC<Gem3DProps> = ({
     camera.lookAt(0, -0.05, 0);
 
     // Three-point studio rig calibrated for deep jewel saturation + crisp specular facets
-    const hemi = new THREE.HemisphereLight('#7CA4FF', '#02040D', 0.24);
+    const hemi = new THREE.HemisphereLight('#7CA4FF', '#02040D', isSoftwareGl ? 0.55 : 0.24);
     scene.add(hemi);
 
-    const keyLight = new THREE.DirectionalLight('#FFFFFF', 3.4);
+    const keyLight = new THREE.DirectionalLight('#FFFFFF', isSoftwareGl ? 3.8 : 3.4);
     keyLight.position.set(3.4, 4.8, 4.2);
     scene.add(keyLight);
 
@@ -353,11 +356,18 @@ export const Gem3D: React.FC<Gem3DProps> = ({
     const ro = new ResizeObserver(handleResize);
     ro.observe(mount);
 
-    // Visibility observer to pause off-screen canvases
+    // Visibility observer to pause off-screen canvases completely
     let isVisible = true;
+    let loopScheduled = false;
+    let resumeLoop: (() => void) | null = null;
     const io = new IntersectionObserver(
       (entries) => {
-        isVisible = entries[0]?.isIntersecting ?? true;
+        const nextVisible = entries[0]?.isIntersecting ?? true;
+        const wasVisible = isVisible;
+        isVisible = nextVisible;
+        if (!wasVisible && nextVisible && !loopScheduled) {
+          resumeLoop?.();
+        }
       },
       { threshold: 0.02 },
     );
@@ -467,16 +477,9 @@ export const Gem3D: React.FC<Gem3DProps> = ({
       if (!disposed) syncAndRender(0);
     };
 
-    const tick = () => {
-      if (disposed) return;
-      const now = performance.now();
-      const dt = Math.min((now - lastTime) / 1000, 0.05);
-      lastTime = now;
-
-      if (isVisible) {
-        syncAndRender(dt);
-      }
-
+    const scheduleNext = () => {
+      if (disposed || !isVisible || loopScheduled) return;
+      loopScheduled = true;
       if (isSoftwareGl) {
         afterDraw(renderer, tick, (id) => {
           frameId = id;
@@ -486,14 +489,28 @@ export const Gem3D: React.FC<Gem3DProps> = ({
       }
     };
 
+    const tick = () => {
+      loopScheduled = false;
+      if (disposed || !isVisible) return;
+      const now = performance.now();
+      const dt = Math.min((now - lastTime) / 1000, 0.05);
+      lastTime = now;
+
+      syncAndRender(dt);
+      scheduleNext();
+    };
+
+    resumeLoop = () => {
+      lastTime = performance.now();
+      scheduleNext();
+    };
+
     if (isSoftwareGl) {
-      // Draw first frame immediately, then pace with afterDraw
+      // Draw first frame immediately, then pace with afterDraw only while visible
       syncAndRender(0);
-      afterDraw(renderer, tick, (id) => {
-        frameId = id;
-      });
+      scheduleNext();
     } else {
-      frameId = requestAnimationFrame(tick);
+      scheduleNext();
     }
 
     return () => {
@@ -519,7 +536,7 @@ export const Gem3D: React.FC<Gem3DProps> = ({
       causticPlane.geometry.dispose();
       causticMat.dispose();
       causticTex.dispose();
-      envTex.dispose();
+      envTex?.dispose();
       renderer.dispose();
     };
   }, [fallbackActive]);

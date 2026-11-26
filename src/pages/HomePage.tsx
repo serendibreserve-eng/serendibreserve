@@ -29,6 +29,7 @@ import { ImageSlot } from '../components/ImageSlot';
 import { CountUpNumber, SplitHeading, TiltGemCard } from '../components/MotionPrimitives';
 import { PageSEO } from '../components/PageSEO';
 import { SriLankaMap } from '../components/SriLankaMap';
+import { HomeAuctionSections } from '../components/HomeAuctionSections';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -116,17 +117,17 @@ export const HomePage: React.FC = () => {
 
             <div className="flex flex-wrap items-center gap-3 pt-1 sm:gap-3.5 sm:pt-2">
               <Link
-                to="/gem-types"
+                to="/auctions/live"
                 className="btn-luxury-primary inline-flex items-center gap-2.5 px-5 py-3 text-xs font-medium tracking-[0.18em] uppercase text-white sm:px-7 sm:py-3.5"
               >
-                <span>Explore Our Gems</span>
+                <span>Live Auctions</span>
                 <ArrowRight size={14} aria-hidden="true" />
               </Link>
               <Link
-                to="/inquiries"
+                to="/gem-types"
                 className="btn-luxury inline-flex items-center gap-2.5 px-5 py-3 text-xs font-medium tracking-[0.18em] uppercase text-[#E6EAF0] sm:px-7 sm:py-3.5"
               >
-                <span>Make an Inquiry</span>
+                <span>Explore Our Gems</span>
               </Link>
             </div>
           </div>
@@ -148,6 +149,9 @@ export const HomePage: React.FC = () => {
           </div>
         </div>
       </section>
+
+      {/* AUCTION PLATFORM SHOWCASE (Immediately below Hero) */}
+      <HomeAuctionSections />
 
       {/* b) GEM CAROUSEL — THE COLLECTION */}
       <CollectionShowcaseStage onInspectGem={(gemId) => navigate(`/gem-types?gem=${gemId}`)} />

@@ -53,23 +53,15 @@ export const GemParticles: React.FC<GemParticlesProps> = ({
 
     let rafId = 0;
     let visible = true;
+    let lastDraw = 0;
 
-    const io = new IntersectionObserver(
-      (entries) => {
-        visible = entries[0]?.isIntersecting ?? true;
-      },
-      { threshold: 0.01 },
-    );
-    io.observe(canvas);
-
-    const onResize = () => {
-      width = canvas.width = canvas.offsetWidth || window.innerWidth;
-      height = canvas.height = canvas.offsetHeight || window.innerHeight;
-    };
-    window.addEventListener('resize', onResize, { passive: true });
-
-    const draw = () => {
-      if (visible) {
+    const draw = (now = performance.now()) => {
+      if (!visible) {
+        rafId = 0;
+        return;
+      }
+      if (now - lastDraw >= 32) {
+        lastDraw = now;
         ctx.clearRect(0, 0, width, height);
         for (const s of shards) {
           s.x += s.vx;
@@ -98,6 +90,24 @@ export const GemParticles: React.FC<GemParticlesProps> = ({
       }
       rafId = requestAnimationFrame(draw);
     };
+
+    const io = new IntersectionObserver(
+      (entries) => {
+        const nextVisible = entries[0]?.isIntersecting ?? true;
+        visible = nextVisible;
+        if (nextVisible && !rafId) {
+          rafId = requestAnimationFrame(draw);
+        }
+      },
+      { threshold: 0.01 },
+    );
+    io.observe(canvas);
+
+    const onResize = () => {
+      width = canvas.width = canvas.offsetWidth || window.innerWidth;
+      height = canvas.height = canvas.offsetHeight || window.innerHeight;
+    };
+    window.addEventListener('resize', onResize, { passive: true });
 
     rafId = requestAnimationFrame(draw);
 

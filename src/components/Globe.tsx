@@ -222,9 +222,16 @@ export const Globe: React.FC<GlobeProps> = ({ activeRegion = 'All', className = 
     globeGroup.rotation.x = 0.25;
 
     let isVisible = true;
+    let loopScheduled = false;
+    let resumeLoop: (() => void) | null = null;
     const io = new IntersectionObserver(
       (entries) => {
-        isVisible = entries[0]?.isIntersecting ?? true;
+        const nextVisible = entries[0]?.isIntersecting ?? true;
+        const wasVisible = isVisible;
+        isVisible = nextVisible;
+        if (!wasVisible && nextVisible && !loopScheduled) {
+          resumeLoop?.();
+        }
       },
       { threshold: 0.02 },
     );
@@ -260,41 +267,9 @@ export const Globe: React.FC<GlobeProps> = ({ activeRegion = 'All', className = 
     let elapsed = 0;
     const _pulsePos = new THREE.Vector3();
 
-    const tick = () => {
-      if (disposed) return;
-      const now = performance.now();
-      const dt = Math.min((now - lastTime) / 1000, 0.05);
-      lastTime = now;
-
-      if (isVisible) {
-        elapsed += dt;
-        const activeReg = regionRef.current;
-
-        if (activeReg === 'All') {
-          globeGroup.rotation.y += dt * 0.14;
-        } else {
-          const targetY = regionTargetLon[activeReg] ?? -2.55;
-          globeGroup.rotation.y += (targetY - globeGroup.rotation.y) * 0.05;
-        }
-
-        arcEntries.forEach((entry, idx) => {
-          const highlighted = activeReg === 'All' || entry.region === activeReg;
-          entry.lineMat.opacity = highlighted ? 0.72 : 0.12;
-          entry.lineMat.color.set(highlighted ? '#E6EAF0' : '#1B3FD9');
-          entry.nodeMat.color.set(highlighted ? '#3D7BFF' : '#1B3FD9');
-          entry.node.scale.setScalar(highlighted ? 1.15 : 0.7);
-          entry.pulse.visible = highlighted;
-
-          if (highlighted) {
-            const t = (elapsed * 0.35 + idx * 0.13) % 1;
-            entry.curve.getPoint(t, _pulsePos);
-            entry.pulse.position.copy(_pulsePos);
-          }
-        });
-
-        renderer.render(scene, camera);
-      }
-
+    const scheduleNext = () => {
+      if (disposed || !isVisible || loopScheduled) return;
+      loopScheduled = true;
       if (isSoftwareGl) {
         afterDraw(renderer, tick, (id) => {
           frameId = id;
@@ -304,13 +279,52 @@ export const Globe: React.FC<GlobeProps> = ({ activeRegion = 'All', className = 
       }
     };
 
+    const tick = () => {
+      loopScheduled = false;
+      if (disposed || !isVisible) return;
+      const now = performance.now();
+      const dt = Math.min((now - lastTime) / 1000, 0.05);
+      lastTime = now;
+
+      elapsed += dt;
+      const activeReg = regionRef.current;
+
+      if (activeReg === 'All') {
+        globeGroup.rotation.y += dt * 0.14;
+      } else {
+        const targetY = regionTargetLon[activeReg] ?? -2.55;
+        globeGroup.rotation.y += (targetY - globeGroup.rotation.y) * 0.05;
+      }
+
+      arcEntries.forEach((entry, idx) => {
+        const highlighted = activeReg === 'All' || entry.region === activeReg;
+        entry.lineMat.opacity = highlighted ? 0.72 : 0.12;
+        entry.lineMat.color.set(highlighted ? '#E6EAF0' : '#1B3FD9');
+        entry.nodeMat.color.set(highlighted ? '#3D7BFF' : '#1B3FD9');
+        entry.node.scale.setScalar(highlighted ? 1.15 : 0.7);
+        entry.pulse.visible = highlighted;
+
+        if (highlighted) {
+          const t = (elapsed * 0.35 + idx * 0.13) % 1;
+          entry.curve.getPoint(t, _pulsePos);
+          entry.pulse.position.copy(_pulsePos);
+        }
+      });
+
+      renderer.render(scene, camera);
+      scheduleNext();
+    };
+
+    resumeLoop = () => {
+      lastTime = performance.now();
+      scheduleNext();
+    };
+
     if (isSoftwareGl) {
       renderer.render(scene, camera);
-      afterDraw(renderer, tick, (id) => {
-        frameId = id;
-      });
+      scheduleNext();
     } else {
-      frameId = requestAnimationFrame(tick);
+      scheduleNext();
     }
 
     return () => {
