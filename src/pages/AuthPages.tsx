@@ -13,7 +13,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { PageSEO } from '../components/PageSEO';
-import { isValidEmailAddress } from '../utils/auctionLogic';
+import { formatFirebaseAuthError, isValidEmailAddress } from '../utils/auctionLogic';
 
 const GoogleMark: React.FC = () => (
   <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true">
@@ -35,6 +35,7 @@ export const LoginPage: React.FC = () => {
   const [rememberMe, setRememberMe] = useState(true);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
+  const [showGoogleFallback, setShowGoogleFallback] = useState(false);
 
   useEffect(() => {
     if (firebaseUser) {
@@ -45,6 +46,7 @@ export const LoginPage: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    setShowGoogleFallback(false);
     if (!isValidEmailAddress(email)) {
       setError('Please enter a valid email address.');
       return;
@@ -54,7 +56,9 @@ export const LoginPage: React.FC = () => {
       await signInWithEmail({ email, password, rememberMe });
       navigate(redirectPath);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Unable to sign in. Check your credentials.');
+      const formatted = formatFirebaseAuthError(err, 'Unable to sign in. Check your credentials.');
+      setError(formatted.message);
+      setShowGoogleFallback(formatted.isOperationNotAllowed);
     } finally {
       setBusy(false);
     }
@@ -62,6 +66,7 @@ export const LoginPage: React.FC = () => {
 
   const handleGoogle = async () => {
     setError('');
+    setShowGoogleFallback(false);
     setBusy(true);
     try {
       const res = await signInWithGoogle();
@@ -71,7 +76,8 @@ export const LoginPage: React.FC = () => {
         navigate(redirectPath);
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Google sign-in could not be completed.');
+      const formatted = formatFirebaseAuthError(err, 'Google sign-in could not be completed.');
+      setError(formatted.message);
     } finally {
       setBusy(false);
     }
@@ -152,9 +158,22 @@ export const LoginPage: React.FC = () => {
           </div>
 
           {error && (
-            <div className="flex items-start gap-2 border border-rose-400/40 bg-rose-950/40 p-3 text-xs text-rose-200">
-              <AlertCircle size={15} className="mt-0.5 shrink-0" aria-hidden="true" />
-              <span>{error}</span>
+            <div role="alert" className="border border-rose-400/40 bg-rose-950/40 p-3 text-xs text-rose-200">
+              <div className="flex items-start gap-2">
+                <AlertCircle size={15} className="mt-0.5 shrink-0" aria-hidden="true" />
+                <span>{error}</span>
+              </div>
+              {showGoogleFallback && (
+                <button
+                  type="button"
+                  disabled={busy}
+                  onClick={() => void handleGoogle()}
+                  className="mt-3 flex w-full items-center justify-center gap-2 border border-[#D9AE61]/50 bg-[#0A1226] py-2 text-[11px] font-medium tracking-[0.14em] uppercase text-white transition-colors hover:border-[#D9AE61] disabled:opacity-60"
+                >
+                  <GoogleMark />
+                  <span>Continue with Google Instead</span>
+                </button>
+              )}
             </div>
           )}
 
@@ -192,10 +211,12 @@ export const RegisterPage: React.FC = () => {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
+  const [showGoogleFallback, setShowGoogleFallback] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    setShowGoogleFallback(false);
 
     if (fullName.trim().length < 2) {
       setError('Full name is required.');
@@ -234,7 +255,9 @@ export const RegisterPage: React.FC = () => {
       });
       navigate('/verify-email');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Unable to register account.');
+      const formatted = formatFirebaseAuthError(err, 'Unable to register account.');
+      setError(formatted.message);
+      setShowGoogleFallback(formatted.isOperationNotAllowed);
     } finally {
       setBusy(false);
     }
@@ -242,12 +265,14 @@ export const RegisterPage: React.FC = () => {
 
   const handleGoogle = async () => {
     setError('');
+    setShowGoogleFallback(false);
     setBusy(true);
     try {
       const res = await signInWithGoogle();
       navigate(res.needsProfileCompletion ? '/complete-profile' : '/account');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Google registration failed.');
+      const formatted = formatFirebaseAuthError(err, 'Google registration failed.');
+      setError(formatted.message);
     } finally {
       setBusy(false);
     }
@@ -285,10 +310,11 @@ export const RegisterPage: React.FC = () => {
 
         <form onSubmit={handleSubmit} className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div className="sm:col-span-2">
-            <label className="block text-[11px] tracking-[0.16em] uppercase text-[#C9D1DC]">
+            <label htmlFor="register-full-name" className="block text-[11px] tracking-[0.16em] uppercase text-[#C9D1DC]">
               Full Name *
             </label>
             <input
+              id="register-full-name"
               type="text"
               required
               value={fullName}
@@ -298,10 +324,11 @@ export const RegisterPage: React.FC = () => {
           </div>
 
           <div className="sm:col-span-2">
-            <label className="block text-[11px] tracking-[0.16em] uppercase text-[#C9D1DC]">
+            <label htmlFor="register-email" className="block text-[11px] tracking-[0.16em] uppercase text-[#C9D1DC]">
               Email Address *
             </label>
             <input
+              id="register-email"
               type="email"
               required
               value={email}
@@ -311,10 +338,11 @@ export const RegisterPage: React.FC = () => {
           </div>
 
           <div>
-            <label className="block text-[11px] tracking-[0.16em] uppercase text-[#C9D1DC]">
+            <label htmlFor="register-contact" className="block text-[11px] tracking-[0.16em] uppercase text-[#C9D1DC]">
               Contact / WhatsApp *
             </label>
             <input
+              id="register-contact"
               type="tel"
               required
               value={contactNumber}
@@ -325,10 +353,11 @@ export const RegisterPage: React.FC = () => {
           </div>
 
           <div>
-            <label className="block text-[11px] tracking-[0.16em] uppercase text-[#C9D1DC]">
+            <label htmlFor="register-nationality" className="block text-[11px] tracking-[0.16em] uppercase text-[#C9D1DC]">
               Nationality / Country *
             </label>
             <input
+              id="register-nationality"
               type="text"
               required
               value={nationality}
@@ -339,10 +368,11 @@ export const RegisterPage: React.FC = () => {
           </div>
 
           <div className="sm:col-span-2">
-            <label className="block text-[11px] tracking-[0.16em] uppercase text-[#C9D1DC]">
+            <label htmlFor="register-company" className="block text-[11px] tracking-[0.16em] uppercase text-[#C9D1DC]">
               Company / Atelier (Optional)
             </label>
             <input
+              id="register-company"
               type="text"
               value={companyName}
               onChange={(e) => setCompanyName(e.target.value)}
@@ -351,10 +381,11 @@ export const RegisterPage: React.FC = () => {
           </div>
 
           <div>
-            <label className="block text-[11px] tracking-[0.16em] uppercase text-[#C9D1DC]">
+            <label htmlFor="register-password" className="block text-[11px] tracking-[0.16em] uppercase text-[#C9D1DC]">
               Password * (8+ chars)
             </label>
             <input
+              id="register-password"
               type="password"
               required
               value={password}
@@ -364,10 +395,11 @@ export const RegisterPage: React.FC = () => {
           </div>
 
           <div>
-            <label className="block text-[11px] tracking-[0.16em] uppercase text-[#C9D1DC]">
+            <label htmlFor="register-confirm-password" className="block text-[11px] tracking-[0.16em] uppercase text-[#C9D1DC]">
               Confirm Password *
             </label>
             <input
+              id="register-confirm-password"
               type="password"
               required
               value={confirmPassword}
@@ -377,9 +409,22 @@ export const RegisterPage: React.FC = () => {
           </div>
 
           {error && (
-            <div className="sm:col-span-2 flex items-start gap-2 border border-rose-400/40 bg-rose-950/40 p-3 text-xs text-rose-200">
-              <AlertCircle size={15} className="mt-0.5 shrink-0" aria-hidden="true" />
-              <span>{error}</span>
+            <div role="alert" className="sm:col-span-2 border border-rose-400/40 bg-rose-950/40 p-3 text-xs text-rose-200">
+              <div className="flex items-start gap-2">
+                <AlertCircle size={15} className="mt-0.5 shrink-0" aria-hidden="true" />
+                <span>{error}</span>
+              </div>
+              {showGoogleFallback && (
+                <button
+                  type="button"
+                  disabled={busy}
+                  onClick={() => void handleGoogle()}
+                  className="mt-3 flex w-full items-center justify-center gap-2 border border-[#D9AE61]/50 bg-[#0A1226] py-2 text-[11px] font-medium tracking-[0.14em] uppercase text-white transition-colors hover:border-[#D9AE61] disabled:opacity-60"
+                >
+                  <GoogleMark />
+                  <span>Sign Up with Google Instead</span>
+                </button>
+              )}
             </div>
           )}
 
@@ -630,7 +675,7 @@ export const ForgotPasswordPage: React.FC = () => {
       await sendResetEmail(email);
       setSent(true);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Unable to dispatch reset link.');
+      setError(formatFirebaseAuthError(err, 'Unable to dispatch reset link.').message);
     } finally {
       setBusy(false);
     }

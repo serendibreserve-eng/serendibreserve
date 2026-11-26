@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
+import React, { createContext, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import {
   browserLocalPersistence,
   browserSessionPersistence,
@@ -97,6 +97,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   );
   const [userReminders, setUserReminders] = useState<AuctionReminder[]>([]);
   const [notifications, setNotifications] = useState<AppNotification[]>([]);
+  const registrationInProgressRef = useRef<Set<string>>(new Set());
 
   // Public live/upcoming/completed catalog listener + platform settings listener
   useEffect(() => {
@@ -137,13 +138,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
 
       const userRef = doc(db, 'users', user.uid);
+      const normalizedEmail = (user.email || '').toLowerCase();
+      const registrationPending = registrationInProgressRef.current.has(normalizedEmail);
       const isBootstrap =
         user.emailVerified &&
-        (user.email || '').toLowerCase() === BOOTSTRAP_ADMIN_EMAIL;
+        normalizedEmail === BOOTSTRAP_ADMIN_EMAIL;
 
       try {
         const snap = await getDoc(userRef);
-        if (!snap.exists()) {
+        if (!snap.exists() && !registrationPending) {
           const providerId = user.providerData[0]?.providerId === 'password' ? 'password' : 'google';
           await setDoc(userRef, {
             uid: user.uid,
@@ -319,46 +322,56 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const registerWithEmail = async (params: RegisterParams) => {
-    const cred = await createUserWithEmailAndPassword(
-      auth,
-      params.email.trim(),
-      params.password
-    );
-    await updateProfile(cred.user, {
-      displayName: params.fullName.trim().slice(0, AUCTION_SCHEMA_LIMITS.fullNameMax),
-    });
+    const normalizedEmail = params.email.trim().toLowerCase().slice(0, 160);
+    registrationInProgressRef.current.add(normalizedEmail);
+    try {
+      const cred = await createUserWithEmailAndPassword(
+        auth,
+        params.email.trim(),
+        params.password
+      );
+      await updateProfile(cred.user, {
+        displayName: params.fullName.trim().slice(0, AUCTION_SCHEMA_LIMITS.fullNameMax),
+      });
 
-    const isBootstrap =
-      cred.user.emailVerified &&
-      (cred.user.email || '').toLowerCase() === BOOTSTRAP_ADMIN_EMAIL;
+      const isBootstrap =
+        cred.user.emailVerified &&
+        (cred.user.email || '').toLowerCase() === BOOTSTRAP_ADMIN_EMAIL;
 
-    await setDoc(doc(db, 'users', cred.user.uid), {
-      uid: cred.user.uid,
-      fullName: params.fullName.trim().slice(0, AUCTION_SCHEMA_LIMITS.fullNameMax),
-      email: params.email.trim().toLowerCase().slice(0, 160),
-      contactNumber: params.contactNumber.trim().slice(0, AUCTION_SCHEMA_LIMITS.contactNumberMax),
-      nationality: params.nationality.trim().slice(0, AUCTION_SCHEMA_LIMITS.nationalityMax),
-      companyName: (params.companyName || '').trim().slice(0, AUCTION_SCHEMA_LIMITS.companyNameMax),
-      photoURL: '',
-      authProvider: 'password',
-      role: isBootstrap ? 'admin' : 'user',
-      accountStatus: cred.user.emailVerified ? 'active' : 'pending_verification',
-      emailVerified: cred.user.emailVerified,
-      profileCompleted: Boolean(
-        params.fullName.trim() && params.contactNumber.trim() && params.nationality.trim()
-      ),
-      watchlistAuctionIds: [],
-      notificationPreferences: {
-        emailReminders: true,
-        outbidAlerts: true,
-        newAuctionAlerts: true,
-        liveStartAlerts: true,
-      },
-      createdAt: serverTimestamp(),
-      updatedAt: serverTimestamp(),
-    });
+      try {
+        await setDoc(doc(db, 'users', cred.user.uid), {
+          uid: cred.user.uid,
+          fullName: params.fullName.trim().slice(0, AUCTION_SCHEMA_LIMITS.fullNameMax),
+          email: normalizedEmail,
+          contactNumber: params.contactNumber.trim().slice(0, AUCTION_SCHEMA_LIMITS.contactNumberMax),
+          nationality: params.nationality.trim().slice(0, AUCTION_SCHEMA_LIMITS.nationalityMax),
+          companyName: (params.companyName || '').trim().slice(0, AUCTION_SCHEMA_LIMITS.companyNameMax),
+          photoURL: '',
+          authProvider: 'password',
+          role: isBootstrap ? 'admin' : 'user',
+          accountStatus: cred.user.emailVerified ? 'active' : 'pending_verification',
+          emailVerified: cred.user.emailVerified,
+          profileCompleted: Boolean(
+            params.fullName.trim() && params.contactNumber.trim() && params.nationality.trim()
+          ),
+          watchlistAuctionIds: [],
+          notificationPreferences: {
+            emailReminders: true,
+            outbidAlerts: true,
+            newAuctionAlerts: true,
+            liveStartAlerts: true,
+          },
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp(),
+        });
+      } catch (firestoreErr) {
+        handleFirestoreError(firestoreErr, OperationType.CREATE, `users/${cred.user.uid}`);
+      }
 
-    await sendEmailVerification(cred.user);
+      await sendEmailVerification(cred.user);
+    } finally {
+      registrationInProgressRef.current.delete(normalizedEmail);
+    }
   };
 
   const signInWithEmail = async (params: {

@@ -6,6 +6,7 @@ import {
   computeMinimumNextBidMinor,
   formatCountdown,
   formatCurrencyMinor,
+  formatFirebaseAuthError,
   getEffectiveAuctionStatus,
   makeBidderAlias,
   normalizeSubscriptionId,
@@ -296,4 +297,30 @@ test('buildDemoSeedDocuments generates 9 deterministic lots, 7 Lot-01 bids, exac
   assert.equal(preview01.bids[0].bidSequence, 7);
   assert.equal(preview01.bids[0].amountMinor, 2_485_000);
   assert.equal(getDemoPreviewLotAndBids('non_existent_lot', nowMs), null);
+});
+
+test('formatFirebaseAuthError maps auth/operation-not-allowed and common Firebase auth codes cleanly', () => {
+  const opNotAllowedFromCode = formatFirebaseAuthError({
+    code: 'auth/operation-not-allowed',
+    message: 'Firebase: Error (auth/operation-not-allowed).',
+  });
+  assert.equal(opNotAllowedFromCode.code, 'auth/operation-not-allowed');
+  assert.equal(opNotAllowedFromCode.isOperationNotAllowed, true);
+  assert.match(opNotAllowedFromCode.message, /Google Sign-In/i);
+  assert.match(opNotAllowedFromCode.message, /Sign-in method/i);
+
+  const opNotAllowedFromMessage = formatFirebaseAuthError(
+    new Error('Firebase: Error (auth/operation-not-allowed).')
+  );
+  assert.equal(opNotAllowedFromMessage.isOperationNotAllowed, true);
+  assert.equal(opNotAllowedFromMessage.code, 'auth/operation-not-allowed');
+
+  const alreadyInUse = formatFirebaseAuthError({ code: 'auth/email-already-in-use' });
+  assert.equal(alreadyInUse.isOperationNotAllowed, false);
+  assert.match(alreadyInUse.message, /already exists/i);
+
+  const generic = formatFirebaseAuthError(new Error('Custom network failure'));
+  assert.equal(generic.isOperationNotAllowed, false);
+  assert.equal(generic.code, null);
+  assert.equal(generic.message, 'Custom network failure');
 });

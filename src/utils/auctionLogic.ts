@@ -345,3 +345,100 @@ export function buildSubscriptionsCsv(
   );
   return [header, ...rows].join('\n');
 }
+
+export interface FormattedAuthError {
+  message: string;
+  isOperationNotAllowed: boolean;
+  code: string | null;
+}
+
+export function formatFirebaseAuthError(
+  err: unknown,
+  fallbackMessage = 'Authentication could not be completed. Please try again.'
+): FormattedAuthError {
+  const rawCode =
+    typeof err === 'object' && err !== null && 'code' in err && typeof (err as { code?: unknown }).code === 'string'
+      ? (err as { code: string }).code
+      : null;
+
+  const rawMessage = err instanceof Error ? err.message : typeof err === 'string' ? err : '';
+  const codeMatch = rawCode || rawMessage.match(/auth\/[a-z0-9-]+/i)?.[0]?.toLowerCase() || null;
+
+  switch (codeMatch) {
+    case 'auth/operation-not-allowed':
+      return {
+        code: codeMatch,
+        isOperationNotAllowed: true,
+        message:
+          'Email & password authentication is currently disabled in Firebase Console for this project. Please continue with Google Sign-In below, or enable the Email/Password provider under Firebase Console → Authentication → Sign-in method.',
+      };
+    case 'auth/email-already-in-use':
+      return {
+        code: codeMatch,
+        isOperationNotAllowed: false,
+        message: 'An account with this email address already exists. Please sign in or reset your password.',
+      };
+    case 'auth/invalid-email':
+      return {
+        code: codeMatch,
+        isOperationNotAllowed: false,
+        message: 'Please enter a valid email address.',
+      };
+    case 'auth/invalid-credential':
+    case 'auth/wrong-password':
+    case 'auth/user-not-found':
+      return {
+        code: codeMatch,
+        isOperationNotAllowed: false,
+        message: 'Incorrect email address or password. Please verify your credentials or continue with Google.',
+      };
+    case 'auth/weak-password':
+      return {
+        code: codeMatch,
+        isOperationNotAllowed: false,
+        message: 'Password is too weak. Please choose at least 8 characters with letters and numbers.',
+      };
+    case 'auth/too-many-requests':
+      return {
+        code: codeMatch,
+        isOperationNotAllowed: false,
+        message: 'Too many authentication attempts. Please wait a few minutes before trying again.',
+      };
+    case 'auth/popup-closed-by-user':
+      return {
+        code: codeMatch,
+        isOperationNotAllowed: false,
+        message: 'Google sign-in window was closed before completing authentication.',
+      };
+    case 'auth/popup-blocked':
+      return {
+        code: codeMatch,
+        isOperationNotAllowed: false,
+        message: 'Your browser blocked the sign-in pop-up. Please allow pop-ups for this site and try again.',
+      };
+    case 'auth/unauthorized-domain':
+      return {
+        code: codeMatch,
+        isOperationNotAllowed: false,
+        message: 'This domain is not authorized in Firebase Authentication settings.',
+      };
+    case 'auth/network-request-failed':
+      return {
+        code: codeMatch,
+        isOperationNotAllowed: false,
+        message: 'Network error while contacting authentication servers. Check your connection and try again.',
+      };
+    case 'auth/user-disabled':
+      return {
+        code: codeMatch,
+        isOperationNotAllowed: false,
+        message: 'This account has been disabled. Please contact Serendib Reserve support.',
+      };
+    default:
+      return {
+        code: codeMatch,
+        isOperationNotAllowed: false,
+        message: rawMessage.trim() || fallbackMessage,
+      };
+  }
+}
